@@ -62,6 +62,3 @@ for setup in di_setups:
     tijd = setup['Setup time']
 
     setup_times[(van, naar)] = tijd
-
-print(setup_times[('Green', 'Yellow')])
-
