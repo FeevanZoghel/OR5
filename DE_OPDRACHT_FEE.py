@@ -30,15 +30,17 @@ di_machines = dictionary(df_machines)
 di_setups = dictionary(df_setups)
 
 
-start_dag               = 0 
+start_dag_m1            = 0 
+start_dag_m2            = 0 
+start_dag_m3            = 0 
+
 total_penalties         = 0
 total_tardiness         = 0
+
 volgorde_m1             = []
 volgorde_m2             = []
-volgorde_m3             = []
+volgorde_m3             = [] 
+
 best                    = []
 
-di_orders.sort(key=lambda job: job['Deadline'])
-
-for machine in di_machines:
-    print(machine['Speed'])
+sorteer_orders = di_orders.sort(key=lambda job: job['Deadline'])
