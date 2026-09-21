@@ -21,35 +21,3 @@ def dictionary(df):
         jobs.append(job)
 
     return jobs
-
-
-jobname = []
-processingtime = []
-duedate = []
-for i in df['JobName']:
-    jobname.append(i)
-for i in df['ProcessingTime']:
-    processingtime.append(i)
-for i in df['DueDate']:
-    duedate.append(i)
-
-#greedy methode
-dag = 0 
-totaltardiness = 0
-volgorde = []
-best = []
-for i in range(len(jobname)):
-    k = duedate.index(min(duedate))
-    dag+= processingtime[k]
-    if dag>duedate[k]:
-        totaltardiness+= -(duedate[k]-dag)
-    volgorde.append(jobname[k])
-    jobname.pop(k)
-    duedate.pop(k)
-    processingtime.pop(k)
-
-best = volgorde.copy()
-best_tardiness = bereken_tardiness(best, jobs)
-current = best.copy()
-
-print(best, best_tardiness)
