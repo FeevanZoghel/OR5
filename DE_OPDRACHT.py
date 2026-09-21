@@ -60,6 +60,9 @@ def plan_order(machine, order, tijd, vorige_kleur):
 aantal_machines     = len(di_machines)
 tijden              = [0]* aantal_machines
 tardiness           = [0]*aantal_machines
+penalty_per_order   = []
+tardiness_per_order = []
+machines_per_order  = []
 vorige_kleuren      = [None]*aantal_machines
 volgordes           = [[] for _ in range(aantal_machines)]
 total_tardiness     = 0
@@ -88,6 +91,7 @@ for order in di_orders:
     for i in mogelijke_machines:
         if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
             machine_index = i
+    machines_per_order.append(int(machine_index))
 
     # Order op gekozen machine plannen
     tijden[machine_index], vorige_kleuren[machine_index], tard , penaltyorder = plan_order(
@@ -97,11 +101,13 @@ for order in di_orders:
         vorige_kleuren[machine_index]
     )
 
-    # Resultaat opslaan
+    # Resultaten opslaan
     penalty  += penaltyorder
     volgordes[machine_index].append(order['Order'])
     tardiness[machine_index] += tard
-
+    tot_penalty_order = penaltyorder*tard
+    penalty_per_order.append(tot_penalty_order)
+    tardiness_per_order.append(tard)
 
 
 for i in range(len(di_machines)):
@@ -112,3 +118,6 @@ for i in range(len(di_machines)):
 
 print(f'De totale vertraging is {total_tardiness:.2f} tijdseenheden')
 print(f'De totale penalty is {penalty:.2f}')
+print(f'{'Order':<8} {'Tardiness':>10} {'Penalty/tijd':>14} {'Tot_penalty':>14} {'Machine':>10}')
+for i in range(len(tardiness_per_order)):
+    print(f'{di_orders[i]['Order']:<8} {tardiness_per_order[i]:>10.2f} {di_orders[i]['Penalty']:>14.2f} {penalty_per_order[i]:>14.2f} {machines_per_order[i]:>10.0f}') 
