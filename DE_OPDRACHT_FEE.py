@@ -25,9 +25,12 @@ def dictionary(df):
 
     return jobs
 
-di_orders = dictionary(df_orders)
-di_machines = dictionary(df_machines)
-di_setups = dictionary(df_setups)
+di_orders_org = dictionary(df_orders)
+di_orders = di_orders_org.copy()
+di_machines_org = dictionary(df_machines)
+di_machines = di_machines_org.copy()
+di_setups_org = dictionary(df_setups)
+di_setups = di_setups_org.copy()
 
 
 start_dag_m1            = 0 
@@ -43,4 +46,5 @@ volgorde_m3             = []
 
 best                    = []
 
-sorteer_orders = di_orders.sort(key=lambda job: job['Deadline'])
+di_orders.sort(key=lambda job: job['Deadline'])
+
