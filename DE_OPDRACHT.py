@@ -49,20 +49,21 @@ def plan_order(machine, order, tijd, vorige_kleur):
     # Productietijd
     tijd += order['Surface'] / machine['Speed']
 
-    # Tardiness --> geeft de positieve tardiness
-    tardiness = max(0, tijd - order['Deadline'])
+    # Tardiness --> Alleen de vertragingen worden meegenomen
+    tardiness       = max(0, tijd - order['Deadline'])
+    penaltyorder    = order['Penalty']*tardiness
 
-    return tijd, kleur, tardiness
+    return tijd, kleur, tardiness, penaltyorder
 
 ######################################################################
 
 aantal_machines     = len(di_machines)
 tijden              = [0]* aantal_machines
+tardiness           = [0]*aantal_machines
 vorige_kleuren      = [None]*aantal_machines
 volgordes           = [[] for _ in range(aantal_machines)]
-tardiness           = [0]*aantal_machines
 total_tardiness     = 0
-penalty             = [0]*aantal_machines
+penalty             = 0
 
 di_orders.sort(key=lambda order: order['Deadline'])
 
@@ -89,7 +90,7 @@ for order in di_orders:
             machine_index = i
 
     # Order op gekozen machine plannen
-    tijden[machine_index], vorige_kleuren[machine_index], tard = plan_order(
+    tijden[machine_index], vorige_kleuren[machine_index], tard , penaltyorder = plan_order(
         di_machines[machine_index],
         order,
         tijden[machine_index],
@@ -97,15 +98,17 @@ for order in di_orders:
     )
 
     # Resultaat opslaan
+    penalty  += penaltyorder
     volgordes[machine_index].append(order['Order'])
     tardiness[machine_index] += tard
 
 
 
-for i in range(3):
+for i in range(len(di_machines)):
     print(f'Machine {i+1}:')
     print('Order volgorde:', volgordes[i])
-for i in range(3):
+for i in range(len(di_machines)):
     total_tardiness += tardiness[i]
 
 print(f'De totale vertraging is {total_tardiness:.2f} tijdseenheden')
+print(f'De totale penalty is {penalty:.2f}')
