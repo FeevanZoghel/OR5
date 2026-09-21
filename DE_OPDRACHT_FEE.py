@@ -6,7 +6,6 @@ import math as m
 random.seed(42)
 
 df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name = None)
-print(df.head())
 
 df_orders = df['Orders']
 df_machines = df['Machines']
@@ -30,4 +29,16 @@ di_orders = dictionary(df_orders)
 di_machines = dictionary(df_machines)
 di_setups = dictionary(df_setups)
 
-print(df_orders['Colour'].unique())
+
+start_dag               = 0 
+total_penalties         = 0
+total_tardiness         = 0
+volgorde_m1             = []
+volgorde_m2             = []
+volgorde_m3             = []
+best                    = []
+
+di_orders.sort(key=lambda job: job['Deadline'])
+
+for machine in di_machines:
+    print(machine['Speed'])
