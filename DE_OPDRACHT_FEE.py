@@ -8,6 +8,11 @@ random.seed(42)
 df = pd.read_excel('PaintShop-September2026.xlsx')
 print(df.head(10))
 
+df_orders = df['Orders']
+df_machines = df['Machines']
+df_setups = df['Setups']
+
+
 def dictionary(df):
 
     jobs = []
@@ -21,3 +26,7 @@ def dictionary(df):
         jobs.append(job)
 
     return jobs
+
+di_orders = dictionary(df_orders)
+di_machines = dictionary(df_machines)
+di_setups = dictionary(df_setups)
