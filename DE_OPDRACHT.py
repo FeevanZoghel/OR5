@@ -94,7 +94,7 @@ for order in di_orders:
     machines_per_order.append(int(machine_index))
 
     # Order op gekozen machine plannen
-    tijden[machine_index], vorige_kleuren[machine_index], tard , penaltyorder = plan_order(
+    tijden[machine_index], vorige_kleuren[machine_index], tard , penalty_order = plan_order(
         di_machines[machine_index],
         order,
         tijden[machine_index],
@@ -102,11 +102,10 @@ for order in di_orders:
     )
 
     # Resultaten opslaan
-    penalty  += penaltyorder
+    penalty  += penalty_order
     volgordes[machine_index].append(order['Order'])
     tardiness[machine_index] += tard
-    tot_penalty_order = penaltyorder*tard
-    penalty_per_order.append(tot_penalty_order)
+    penalty_per_order.append(penalty_order)
     tardiness_per_order.append(tard)
 
 
