@@ -27,8 +27,10 @@ def dictionary(df):
 
 di_orders_org = dictionary(df_orders)
 di_orders = di_orders_org.copy()
+
 di_machines_org = dictionary(df_machines)
 di_machines = di_machines_org.copy()
+
 di_setups_org = dictionary(df_setups)
 di_setups = di_setups_org.copy()
 
@@ -47,4 +49,19 @@ volgorde_m3             = []
 best                    = []
 
 di_orders.sort(key=lambda job: job['Deadline'])
+
+speed_m1 = di_machines[0]['Speed']
+speed_m2 = di_machines[1]['Speed']
+speed_m3 = di_machines[2]['Speed']
+
+setup_times = {}
+
+for setup in di_setups:
+    van = setup['From colour']
+    naar = setup['To colour']
+    tijd = setup['Setup time']
+
+    setup_times[(van, naar)] = tijd
+
+print(setup_times[('Green', 'Yellow')])
 
