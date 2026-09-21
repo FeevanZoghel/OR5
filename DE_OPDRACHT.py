@@ -30,61 +30,82 @@ di_machines = dictionary(df_machines)
 di_setups = dictionary(df_setups)
 
 
-start_dag_m1            = 0 
-start_dag_m2            = 0 
-start_dag_m3            = 0 
-
-total_penalties         = 0
-tt_m1                   = 0
-
-volgorde_m1             = []
-volgorde_m2             = []
-volgorde_m3             = [] 
-
-best                    = []
-
-
-
-
-start_dag_m2            = 0
-tot_tard_m2             = 0
-volgorde_m2             = []
-
 di_orders.sort(key=lambda job: job['Deadline'])
 di_machines.sort(key=lambda machine: machine['Speed'], reverse=True)
 
+#####################DEFENITIE##################################
+
+def plan_order(machine, order, tijd, vorige_kleur):
+
+    kleur = order['Colour']
+
+    # Extra tijd voor kleur verandering
+    if vorige_kleur != None and kleur != vorige_kleur:
+        for setup in di_setups:
+            if setup['From colour'] == vorige_kleur and setup['To colour'] == kleur:
+                tijd += setup['Setup time']
+                break
+
+    # Productietijd
+    tijd += order['Surface'] / machine['Speed']
+
+    # Tardiness --> geeft de positieve tardiness
+    tardiness = max(0, tijd - order['Deadline'])
+
+    return tijd, kleur, tardiness
+
+######################################################################
+
+aantal_machines     = len(di_machines)
+tijden              = [0]* aantal_machines
+vorige_kleuren      = [None]*aantal_machines
+volgordes           = [[] for _ in range(aantal_machines)]
+tardiness           = [0]*aantal_machines
+total_tardiness     = 0
+penalty             = [0]*aantal_machines
+
+di_orders.sort(key=lambda order: order['Deadline'])
+
+for order in di_orders:
+
+    # Machine met laagste huidige tijd
+    laagste_tijd = min(tijden)
+
+
+    # Machines die de order kunnen uitvoeren
+
+    mogelijke_machines = []
+
+    for i in range(len(di_machines)):
+    
+        if tijden[i] == laagste_tijd:
+            mogelijke_machines.append(i)
+
+    # Bij gelijke tijd: snelste machine
+    machine_index = mogelijke_machines[0]
+
+    for i in mogelijke_machines:
+        if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
+            machine_index = i
+
+    # Order op gekozen machine plannen
+    tijden[machine_index], vorige_kleuren[machine_index], tard = plan_order(
+        di_machines[machine_index],
+        order,
+        tijden[machine_index],
+        vorige_kleuren[machine_index]
+    )
+
+    # Resultaat opslaan
+    volgordes[machine_index].append(order['Order'])
+    tardiness[machine_index] += tard
 
 
 
-def planning_machine(machine, orders):
+for i in range(3):
+    print(f'Machine {i+1}:')
+    print('Order volgorde:', volgordes[i])
+for i in range(3):
+    total_tardiness += tardiness[i]
 
-    start_dag            = 0
-    tot_tard             = 0
-    volgorde             = []
-    vorige_kleur         = None
-    for order in orders:
-
-        volgorde.append(order['Order'])
-        
-        kleur = order['Colour']
-        
-
-        #  extra tijd voor de kleurverandering
-        if  vorige_kleur != None and kleur!= vorige_kleur:
-            for setup in di_setups:
-                if setup['From colour']==vorige_kleur and setup['To colour']==kleur:
-                    start_dag+= setup['Setup time']
-                    break
-
-        # productietijd
-        tijd = order['Surface']/machine['Speed']
-        start_dag += tijd
-
-        # tardiness
-        if start_dag>order['Deadline']:
-            tot_tard += start_dag-order['Deadline']
-        vorige_kleur = kleur
-    return start_dag, tot_tard, volgorde
-
-tijdm2, tardm1, volgordem1 = planning_machine(di_machines[0], di_orders)
-print(tijdm2, tardm1, volgordem1 )
+print(f'De totale vertraging is {total_tardiness:.2f} tijdseenheden')
