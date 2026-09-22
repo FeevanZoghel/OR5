@@ -119,4 +119,4 @@ print(f'De totale vertraging is {total_tardiness:.2f} tijdseenheden')
 print(f'De totale penalty is {penalty:.2f}')
 print(f'{'Order':<8} {'Tardiness':>10} {'Penalty/tijd':>14} {'Tot_penalty':>14} {'Machine':>10}')
 for i in range(len(tardiness_per_order)):
-    print(f'{di_orders[i]['Order']:<8} {tardiness_per_order[i]:>10.2f} {di_orders[i]['Penalty']:>14.2f} {penalty_per_order[i]:>14.2f} {machines_per_order[i]:>10.0f}') 
+    print(f'{di_orders[i]['Order']:<8} {tardiness_per_order[i]:>10.2f} {di_orders[i]['Penalty']:>14.2f} {penalty_per_order[i]:>14.2f} {machines_per_order[i]+1:>10.0f}') 
