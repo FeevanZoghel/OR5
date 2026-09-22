@@ -158,57 +158,75 @@ def greedy_schedule(di_orders, di_machines, di_setups):
 
 (volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order) = greedy_schedule(di_orders, di_machines, di_setups)
 
-df1_1 = []
-df1_2 = []
+def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, bestandsnaam='Results.xlsx'):
+    '''
+    Zet de resultaten van de planning in een Excel-bestand.
 
-for i in range(len(di_machines)):
-    df1_1.append(i + 1)
-    df1_2.append(' -> '.join(volgordes[i]))
+    Het Excel-bestand bevat drie tabbladen:
+        1. Resultaten orders
+        2. Volgorde machines
+        3. Totale resultaten
+    '''
 
-    print(f'Machine {i+1}:')
-    print('Order volgorde:', volgordes[i])
+    #Volgorde per machine
+    machine_nummers = []
+    order_volgorde = []
+
+    for i in range(len(di_machines)):
+        machine_nummers.append(i + 1)
+        order_volgorde.append(' -> '.join(volgordes[i]))
+
+    df_MachineOrder = pd.DataFrame({
+        'Machine_number': machine_nummers,
+        'Order machine': order_volgorde
+    })
+
+    #----------------------------------------
+
+    #Totale resultaten
+    df_totalen = pd.DataFrame({
+        'Resultaat': [
+            'Totale vertraging',
+            'Totale penalty'
+        ],
+        'Waarde': [
+            round(total_tardiness, 4),
+            round(penalty,4)
+        ]
+    })
+
+    #----------------------------------------
+
+    #Resultaten per order
+    orders_lijst = []
+    tardiness_lijst = []
+    penalty_tijd_lijst = []
+    tot_penalty_lijst = []
+    machine_lijst = []
+
+    for i in range(len(tardiness_per_order)):
+
+        orders_lijst.append(di_orders[i]['Order'])
+        tardiness_lijst.append(round(tardiness_per_order[i],4))
+        penalty_tijd_lijst.append(di_orders[i]['Penalty'])
+        tot_penalty_lijst.append(round(penalty_per_order[i],4))
+        machine_lijst.append(machines_per_order[i] + 1)
+
+    df_resultaten = pd.DataFrame({
+        'Order': orders_lijst,
+        'tardiness': tardiness_lijst,
+        'Penalty': penalty_tijd_lijst,
+        'Tot_penalty': tot_penalty_lijst,   #penalty x tardiness
+        'Machine': machine_lijst
+    })
+
+    #----------------------------------------
+
+    #Excel bestan maken
+    with pd.ExcelWriter('Resuls.xlsx') as writer:
+        df_resultaten.to_excel(writer, sheet_name = 'Resultaten orders', index = False)  
+        df_MachineOrder.to_excel(writer, sheet_name = 'Volgorde machines', index = False)
+        df_totalen.to_excel(writer, sheet_name = 'Totale resulaten', index = False)
 
 
-df0 = pd.DataFrame({
-    'Machine_number': df1_1,
-    'Order machine': df1_2
-})
-
-
-# Totale resultaten
-print(f'De totale vertraging is {total_tardiness:.2f} tijdseenheden')
-print(f'De totale penalty is {penalty:.2f}')
-
-
-# Tabel
-print(f'{'Order':<8} {'Tardiness':>10} {'Penalty/tijd':>14} {'Tot_penalty':>14} {'Machine':>10}')
-
-order = [] 
-for i in range(len(tardiness_per_order)):
-    print(f'{di_orders[i]['Order']:<8} {tardiness_per_order[i]:>10.2f} {di_orders[i]['Penalty']:>14.2f} {penalty_per_order[i]:>14.2f} {machines_per_order[i]+1:>10.0f}') 
-
-orders_lijst = []
-tardiness_lijst = []
-penalty_tijd_lijst = []
-tot_penalty_lijst = []
-machine_lijst = []
-
-for i in range(len(tardiness_per_order)):
-
-    orders_lijst.append(di_orders[i]['Order'])
-    tardiness_lijst.append(round(tardiness_per_order[i],4))
-    penalty_tijd_lijst.append(di_orders[i]['Penalty'])
-    tot_penalty_lijst.append(round(penalty_per_order[i],4))
-    machine_lijst.append(machines_per_order[i] + 1)
-
-df1 = pd.DataFrame({
-    'Order': orders_lijst,
-    'tardiness': tardiness_lijst,
-    'Penalty': penalty_tijd_lijst,
-    'Tot_penalty': tot_penalty_lijst,   #penalty x tardiness
-    'Machine': machine_lijst
-})
-
-with pd.ExcelWriter('Resuls.xlsx') as writer:
-    df1.to_excel(writer, sheet_name = 'Gegevens', index = False)  
-    df0.to_excel(writer, sheet_name = 'Volgorde_m', index = False)
+resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order)
