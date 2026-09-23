@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import random
 import math as m
+import matplotlib.pyplot as plt
+
 
 random.seed(42)
 
@@ -56,7 +58,7 @@ def plan_order(machine, order, tijd, vorige_kleur, di_setups):
         Tardiness   : De tardiness
         Penaltyorder: Penaltyscore van de tardiness.
     '''
-    tijd_volgorde = []
+
     kleur = order['Colour']
     setup_gevonden = False
 
@@ -70,14 +72,19 @@ def plan_order(machine, order, tijd, vorige_kleur, di_setups):
         if setup_gevonden == False:
             raise ValueError(f'Geen setup gevonden van {vorige_kleur} naar {kleur}')
 
+    #begintijd van de order
+    begintijd = tijd
+
     # Productietijd
     tijd += order['Surface'] / machine['Speed']
+
+    eindtijd = tijd
 
     # Tardiness --> Alleen de vertragingen worden meegenomen
     tardiness       = max(0, tijd - order['Deadline'])
     penaltyorder    = order['Penalty']*tardiness
 
-    return tijd, kleur, tardiness, penaltyorder
+    return tijd, kleur, tardiness, penaltyorder, begintijd, eindtijd
 
 ######################################################################
 
@@ -101,6 +108,8 @@ def greedy_schedule(di_orders, di_machines, di_setups):
         Machines_per_order  : De gekozen machine per order
     '''
 
+    begintijden         = []
+    eindtijden          = []
     aantal_machines     = len(di_machines)
     tijden              = [0]* aantal_machines
     tardiness           = [0]*aantal_machines
@@ -137,13 +146,16 @@ def greedy_schedule(di_orders, di_machines, di_setups):
         machines_per_order.append(int(machine_index))
 
         # Order op gekozen machine plannen
-        tijden[machine_index], vorige_kleuren[machine_index], tard , penalty_order = plan_order(
+        tijden[machine_index], vorige_kleuren[machine_index], tard , penalty_order, begintijd, eindtijd = plan_order(
             di_machines[machine_index],
             order,
             tijden[machine_index],
             vorige_kleuren[machine_index],
             di_setups
         )
+
+        begintijden.append(begintijd)
+        eindtijden.append(eindtijd) 
 
         # Resultaten opslaan
         penalty  += penalty_order
@@ -154,9 +166,9 @@ def greedy_schedule(di_orders, di_machines, di_setups):
         penalty_per_order.append(penalty_order)
         tardiness_per_order.append(tard)
 
-    return (volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order)
+    return (volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden)
 
-(volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order) = greedy_schedule(di_orders, di_machines, di_setups)
+(volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
 
 def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, bestandsnaam='Results.xlsx'):
     '''
@@ -217,7 +229,9 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
         'tardiness': tardiness_lijst,
         'Penalty': penalty_tijd_lijst,
         'Tot_penalty': tot_penalty_lijst,   #penalty x tardiness
-        'Machine': machine_lijst
+        'Machine': machine_lijst,
+        'begintijd': begintijden,
+        'eindtijd': eindtijden
     })
 
     #----------------------------------------
@@ -230,3 +244,45 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
 
 
 resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order)
+
+def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden):
+    '''
+    Maakt een Gantt-chart van de planning.
+
+    Elke horizontale rij stelt een machine voor.
+    Elke balk stelt een order voor van begintijd tot eindtijd.
+    '''
+
+    fig, ax = plt.subplots(figsize=(16, 7))
+
+    machine_kleuren = ['hotpink', 'lightblue', 'lightgreen']
+
+    for i in range(len(di_orders)):
+
+        machine = machines_per_order[i]
+        begintijd = begintijden[i]
+        eindtijd = eindtijden[i]
+
+        duur = eindtijd - begintijd
+
+        # Balk tekenen
+        ax.barh(machine, duur, left=begintijd, height = 0.6,color = machine_kleuren[machine], edgecolor = 'black')
+
+        # Ordernummer in de balk zetten
+        ax.text(begintijd + duur / 2, machine, str(di_orders[i]['Order']), ha='center', va='center', fontsize = 9)
+
+    # Machine-namen op de y-as
+    ax.set_yticks(range(len(di_machines)))
+    ax.set_yticklabels([f'Machine {i + 1}' for i in range(len(di_machines))])
+
+    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)
+
+    ax.set_xlabel('Tijd')
+    ax.set_ylabel('Machine')
+    ax.set_title('Gantt-chart planning')
+
+    plt.tight_layout()
+    plt.show()
+
+gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden)
