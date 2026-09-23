@@ -56,7 +56,7 @@ def plan_order(machine, order, tijd, vorige_kleur, di_setups):
         Tardiness   : De tardiness
         Penaltyorder: Penaltyscore van de tardiness.
     '''
-
+    tijd_volgorde = []
     kleur = order['Colour']
     setup_gevonden = False
 
