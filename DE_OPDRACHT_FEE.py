@@ -172,6 +172,8 @@ def greedy_schedule(di_orders, di_machines, di_setups):
  machines_per_order, 
  begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
 
+print(volgordes,total_tardiness)
+
 
 
 
