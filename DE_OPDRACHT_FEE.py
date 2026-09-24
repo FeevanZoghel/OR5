@@ -115,8 +115,6 @@ def greedy_schedule(di_orders, di_machines, di_setups):
     total_tardiness     = 0
     penalty             = 0
 
-    di_orders.sort(key=lambda order: order['Deadline'])
-
     for order in di_orders:
 
         # Machine met laagste huidige tijd
@@ -172,7 +170,9 @@ def greedy_schedule(di_orders, di_machines, di_setups):
  machines_per_order, 
  begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
 
-print(volgordes,total_tardiness)
+current_order = volgordes
+best_order = volgordes
+
 
 
 
