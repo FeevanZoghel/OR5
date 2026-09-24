@@ -219,9 +219,9 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
     for i in range(len(tardiness_per_order)):
 
         orders_lijst.append(di_orders[i]['Order'])
-        tardiness_lijst.append(round(tardiness_per_order[i],4))
+        tardiness_lijst.append(round(tardiness_per_order[i],2))
         penalty_tijd_lijst.append(di_orders[i]['Penalty'])
-        tot_penalty_lijst.append(round(penalty_per_order[i],4))
+        tot_penalty_lijst.append(round(penalty_per_order[i],2))
         machine_lijst.append(machines_per_order[i] + 1)
 
     df_resultaten = pd.DataFrame({
@@ -241,7 +241,6 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
         df_resultaten.to_excel(writer, sheet_name = 'Resultaten orders', index = False)  
         df_MachineOrder.to_excel(writer, sheet_name = 'Volgorde machines', index = False)
         df_totalen.to_excel(writer, sheet_name = 'Totale resulaten', index = False)
-
 
 resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order)
 
