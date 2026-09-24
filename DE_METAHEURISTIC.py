@@ -159,7 +159,7 @@ def random_swap(current):
 
 
 
-def meta_annealing(df_orders, t_max, cooling_factor, cooling_it, temp):
+def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     
     current = df_orders['Order'].tolist()
 
@@ -204,5 +204,5 @@ cooling_factor =0.99
 cooling_it = 100
 temp = 1000
 
-print(meta_annealing(df_orders, t_max, cooling_factor,cooling_it,temp))
+print(SA(df_orders, t_max, cooling_factor,cooling_it,temp))
 
