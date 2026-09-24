@@ -44,7 +44,7 @@ di_orders.sort(key=lambda job: job['Deadline'])
 di_machines.sort(key=lambda machine: machine['Speed'], reverse=True)
 
 
-def calculate_tardiness1(volgorde, di_orders, di_machines, di_setups):
+def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
     '''
     Berekent de totale tardiness van een gegeven ordervolgorde.
     Orders worden verdeeld over de machines op basis van de
@@ -61,9 +61,14 @@ def calculate_tardiness1(volgorde, di_orders, di_machines, di_setups):
 
     # Totale tardiness
     total_tardiness = 0
+    penalty = 0
+    machines_per_order = []
+    begintijden = []
+    eindtijden = []
 
     # Orders opzoeken via Order-nummer
     orders = {}
+    
 
     for order in di_orders:
         orders[order['Order']] = order
@@ -112,17 +117,23 @@ def calculate_tardiness1(volgorde, di_orders, di_machines, di_setups):
                 )
 
         # Productietijd
-        productietijd = (
-            order['Surface'] / di_machines[machine_index]['Speed']
-        )
+        productietijd = (order['Surface'] / di_machines[machine_index]['Speed'])
+        begintijd     = tijden[machine_index]
 
         tijden[machine_index] += productietijd
 
         # Eindtijd
         eindtijd = tijden[machine_index]
+        machines_per_order.append(machine_index)
+        begintijden.append(begintijd)
+        eindtijden.append(eindtijd)
 
-        # Tardiness
+        # Tardiness+ penalty
         tardiness = max(0, eindtijd - order['Deadline'])
+        if eindtijd - order['Deadline'] >0:
+            penalty+= tardiness*order['Penalty']
+
+        
 
         # Totale tardiness
         total_tardiness += tardiness
@@ -130,7 +141,7 @@ def calculate_tardiness1(volgorde, di_orders, di_machines, di_setups):
         # Kleur opslaan
         vorige_kleuren[machine_index] = kleur
 
-    return total_tardiness
+    return total_tardiness, penalty, machines_per_order, begintijden, eindtijden
 
 
 # begin SA
@@ -164,45 +175,110 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     current = df_orders['Order'].tolist()
 
     random.shuffle(current)
-    current_tard = calculate_tardiness1(current, di_orders, di_machines, di_setups)
+    current_tard, current_penalty, _,_, _ = calculate_tard_pen(current, di_orders, di_machines, di_setups)
 
     best = current.copy()
     best_tardiness = current_tard
+    best_penalty   = current_penalty
 
     for i in range(t_max):
 
         new_current = random_swap(current)
-        new_tard    = calculate_tardiness1(new_current, di_orders, di_machines, di_setups)
-        verschil    = current_tard-new_tard
+        new_tard, new_penalty ,_,_,_    = calculate_tard_pen(new_current, di_orders, di_machines, di_setups)
+        verschil    = current_penalty-new_penalty
         
         kans = m.exp(verschil / temp)
 
         if verschil > 0:
-            current             = new_current.copy()
-            current_tard         = new_tard
+            current              = new_current.copy()
+            current_penalty         = new_penalty
         else:
             getal = np.random.choice([0, 1], p=[1-kans, kans])
 
             # Slechtere oplossing toch accepteren
             if getal == 1:
                 current = new_current.copy()
-                current_tard = new_tard
+                current_penalty = new_penalty
 
         # Is current de beste oplossing die we ooit hebben gezien?
-        if current_tard < best_tardiness:
+        if current_penalty < best_penalty:
             best = current.copy()
-            best_tardiness = current_tard
+            best_penalty = current_penalty
 
         # Temperatuur na 1000 iteraties verlagen
         if (i + 1) % cooling_it == 0:
             temp = temp * cooling_factor
-    return(best, best_tardiness)
+    return(best, best_penalty)
 
 
-t_max = 100000
+t_max = 1000000
 cooling_factor =0.99
-cooling_it = 100
+cooling_it = 1000
 temp = 1000
 
-print(SA(df_orders, t_max, cooling_factor,cooling_it,temp))
+oefen, oefen_pen = SA(df_orders, t_max, cooling_factor, cooling_it,temp)
 
+
+
+
+tard, pen,machines_per_order,begintijden,eindtijden = calculate_tard_pen(oefen, di_orders, di_machines, di_setups)
+print(f'de beste lijst is {oefen}, met een totaletardiness van {tard} en {pen} aan penalty' )
+
+
+def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden):
+    '''
+    Maakt een Gantt-chart van de planning.
+
+    Elke horizontale rij stelt een machine voor.
+    Elke balk stelt een order voor van begintijd tot eindtijd.
+    '''
+
+    fig, ax = plt.subplots(figsize=(16, 7))
+
+    kleur_dict = {
+        'Red': 'red',
+        'Blue': 'blue',
+        'Green': 'green',
+        'Yellow': 'yellow',
+        'Orange': 'orange',
+        'Purple': 'purple',
+        'Pink': 'pink',
+        'Black': 'black',
+        'White': 'white',
+        'Grey': 'grey'
+    }
+    orders = {} 
+    for order in di_orders: 
+        orders[order['Order']] = order
+
+    for i in range(len(volgorde)):
+
+        machine = machines_per_order[i]
+        begintijd = begintijden[i]
+        eindtijd = eindtijden[i]
+
+        duur = eindtijd - begintijd
+        order = orders[volgorde[i]]
+        kleur_order = order['Colour']
+
+        # Balk tekenen
+        ax.barh(machine, duur, left=begintijd, height = 0.6,color = kleur_dict[kleur_order], edgecolor = 'black')
+
+        # Ordernummer in de balk zetten
+        ax.text(begintijd + duur / 2, machine, str(order['Order']), ha='center', va='center', fontsize = 9)
+
+    # Machine-namen op de y-as
+    ax.set_yticks(range(len(di_machines)))
+    ax.set_yticklabels([f'Machine {i + 1}' for i in range(len(di_machines))])
+
+    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    ax.set_axisbelow(True)
+
+    ax.set_xlabel('Tijd')
+    ax.set_ylabel('Machine')
+    ax.set_title('Gantt-chart planning')
+
+    plt.tight_layout()
+    plt.show()
+
+gantt_chart_list(oefen, di_orders, di_machines, machines_per_order, begintijden, eindtijden)
