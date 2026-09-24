@@ -4,10 +4,9 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
-
 random.seed(42)
 
-df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name = None)
+df = pd.read_excel('PaintShop_Test.xlsx', sheet_name = None)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
@@ -46,8 +45,6 @@ di_setups = di_setups_org.copy()
 di_orders.sort(key=lambda job: job['Deadline'])
 di_machines.sort(key=lambda machine: machine['Speed'], reverse=True)
 
-#####################DEFENITIE##################################
-
 def plan_order(machine, order, tijd, vorige_kleur, di_setups):
     '''
     Berekening voor de tardiness
@@ -85,9 +82,6 @@ def plan_order(machine, order, tijd, vorige_kleur, di_setups):
     penaltyorder    = order['Penalty']*tardiness
 
     return tijd, kleur, tardiness, penaltyorder, begintijd, eindtijd
-
-######################################################################
-
 
 def greedy_schedule(di_orders, di_machines, di_setups):
     '''
@@ -168,7 +162,25 @@ def greedy_schedule(di_orders, di_machines, di_setups):
 
     return (volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden)
 
-(volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
+(volgordes, 
+ tijden, 
+ tardiness, 
+ total_tardiness, 
+ penalty, 
+ penalty_per_order, 
+ tardiness_per_order, 
+ machines_per_order, 
+ begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
+
+
+
+
+
+
+
+
+
+
 
 def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, bestandsnaam='Results.xlsx'):
     '''
@@ -193,8 +205,6 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
         'Order machine': order_volgorde
     })
 
-    #----------------------------------------
-
     #Totale resultaten
     df_totalen = pd.DataFrame({
         'Resultaat': [
@@ -206,8 +216,6 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
             round(penalty,4)
         ]
     })
-
-    #----------------------------------------
 
     #Resultaten per order
     orders_lijst = []
@@ -228,13 +236,12 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
         'Order': orders_lijst,
         'tardiness': tardiness_lijst,
         'Penalty': penalty_tijd_lijst,
-        'Tot_penalty': tot_penalty_lijst,   #penalty x tardiness
+        'Tot_penalty': tot_penalty_lijst, #pen x tard
         'Machine': machine_lijst,
-        'begintijd': begintijden,
-        'eindtijd': eindtijden
+        'begintijd': [round(tijd, 2) for tijd in begintijden],
+        'eindtijd': [round(tijd, 2) for tijd in eindtijden]
     })
 
-    #----------------------------------------
 
     #Excel bestan maken
     with pd.ExcelWriter('Resuls.xlsx') as writer:
@@ -252,7 +259,7 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
     Elke balk stelt een order voor van begintijd tot eindtijd.
     '''
 
-    fig, ax = plt.subplots(figsize=(16, 7))
+    fig, ax = plt.subplots(figsize=(13, 7))
 
     kleur_dict = {
         'Red': 'red',
