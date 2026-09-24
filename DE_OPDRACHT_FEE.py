@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 random.seed(42)
 
-df = pd.read_excel('PaintShop_Test.xlsx', sheet_name = None)
+df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name = None)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
@@ -170,21 +170,126 @@ def greedy_schedule(di_orders, di_machines, di_setups):
  machines_per_order, 
  begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
 
-current_order = volgordes
-best_order = volgordes
+def swap(volgorde, i, j):
+    nieuwe_volgorde = volgorde.copy()
+    nieuwe_volgorde[i], nieuwe_volgorde[j] = nieuwe_volgorde[j], nieuwe_volgorde[i]
+    return nieuwe_volgorde
 
+def random_swap(current):
 
+    nieuwe_volgorde = current.copy()
 
+    a = random.randint(0, len(nieuwe_volgorde) - 1)
+    b = random.randint(0, len(nieuwe_volgorde) - 1)
 
+    while a == b:
+        b = random.randint(0, len(nieuwe_volgorde) - 1)
 
+    nieuwe_volgorde[a], nieuwe_volgorde[b] = (
+        nieuwe_volgorde[b],
+        nieuwe_volgorde[a]
+    )
 
+    return nieuwe_volgorde
 
+def improving_search(di_orders, iterations):
 
+    # Beginvolgorde
+    current = di_orders.copy()
+    beste_volgorde = current.copy()
 
+    # Eerste greedy uitvoeren
+    gegevens = greedy_schedule(current, di_machines, di_setups)
 
+    best_penalty = gegevens[4]
+    best_tot_tard = gegevens[3]
 
+    penalty_per_iteratie = []
+    beste_penalty_per_iteratie = []
+    order_lijst = []
 
-def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, bestandsnaam='Results.xlsx'):
+    for _ in range(iterations):
+
+        # Swap vanaf beste oplossing
+        current = random_swap(beste_volgorde)
+
+        # Planning opnieuw maken met greedy
+        gegevens = greedy_schedule(current, di_machines, di_setups)
+
+        current_penalty = gegevens[4]
+
+        # Penalty van ELKE geteste swap opslaan
+        penalty_per_iteratie.append(current_penalty)
+
+        # Alleen accepteren als deze beter is
+        if current_penalty < best_penalty:
+
+            best_penalty = current_penalty
+            best_tot_tard = gegevens[3]
+            beste_volgorde = current.copy()
+
+            order_lijst.append(
+                [order['Order'] for order in beste_volgorde]
+            )
+
+        # Beste penalty na iedere iteratie opslaan
+        beste_penalty_per_iteratie.append(best_penalty)
+
+    return (
+        best_tot_tard,
+        best_penalty,
+        beste_volgorde,
+        penalty_per_iteratie,
+        beste_penalty_per_iteratie
+    )
+
+(
+    best_tot_tard,
+    best_penalty,
+    beste_volgorde,
+    penalty_per_iteratie,
+    beste_penalty_per_iteratie
+) = improving_search(di_orders, 1000)
+
+def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
+
+    plt.figure(figsize=(12, 6))
+
+    plt.plot(
+        penalty_per_iteratie,
+        label='Penalty huidige swap'
+    )
+
+    plt.plot(
+        beste_penalty_per_iteratie,
+        label='Beste penalty'
+    )
+
+    plt.xlabel('Iteratie')
+    plt.ylabel('Totale penalty')
+    plt.title('Improving Search')
+
+    plt.legend()
+    plt.grid()
+
+    plt.show()
+
+plot_penalty(
+    penalty_per_iteratie,
+    beste_penalty_per_iteratie
+)
+
+def resultaten_naar_excel(
+    di_orders,
+    di_machines,
+    volgordes,
+    total_tardiness,
+    penalty,
+    tardiness_per_order,
+    penalty_per_order,
+    machines_per_order,
+    bestandsnaam='Results.xlsx'
+):
     '''
     Zet de resultaten van de planning in een Excel-bestand.
 
@@ -246,12 +351,34 @@ def resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, pe
 
 
     #Excel bestan maken
-    with pd.ExcelWriter('Resuls.xlsx') as writer:
+    with pd.ExcelWriter(bestandsnaam) as writer:
         df_resultaten.to_excel(writer, sheet_name = 'Resultaten orders', index = False)  
         df_MachineOrder.to_excel(writer, sheet_name = 'Volgorde machines', index = False)
         df_totalen.to_excel(writer, sheet_name = 'Totale resulaten', index = False)
 
-resultaten_naar_excel(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order)
+resultaten_naar_excel(
+    di_orders,
+    di_machines,
+    volgordes,
+    total_tardiness,
+    penalty,
+    tardiness_per_order,
+    penalty_per_order,
+    machines_per_order,
+    'Results_greedy.xlsx'
+)
+
+resultaten_naar_excel(
+    beste_volgorde,
+    di_machines,
+    volgordes,
+    best_tot_tard,
+    best_penalty,
+    tardiness_per_order,
+    penalty_per_order,
+    machines_per_order,
+    'Results_greedy_improving.xlsx'
+)
 
 def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden):
     '''
@@ -306,4 +433,4 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
     plt.tight_layout()
     plt.show()
 
-gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden)
+gantt_chart(beste_volgorde, di_machines, machines_per_order, begintijden, eindtijden)
