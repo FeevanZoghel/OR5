@@ -255,7 +255,18 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
 
     fig, ax = plt.subplots(figsize=(16, 7))
 
-    machine_kleuren = ['hotpink', 'lightblue', 'lightgreen']
+    kleur_dict = {
+        'Red': 'red',
+        'Blue': 'blue',
+        'Green': 'green',
+        'Yellow': 'yellow',
+        'Orange': 'orange',
+        'Purple': 'purple',
+        'Pink': 'pink',
+        'Black': 'black',
+        'White': 'white',
+        'Grey': 'grey'
+    }
 
     for i in range(len(di_orders)):
 
@@ -265,8 +276,10 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
 
         duur = eindtijd - begintijd
 
+        kleur_order = di_orders[i]['Colour']
+
         # Balk tekenen
-        ax.barh(machine, duur, left=begintijd, height = 0.6,color = machine_kleuren[machine], edgecolor = 'black')
+        ax.barh(machine, duur, left=begintijd, height = 0.6,color = kleur_dict[kleur_order], edgecolor = 'black')
 
         # Ordernummer in de balk zetten
         ax.text(begintijd + duur / 2, machine, str(di_orders[i]['Order']), ha='center', va='center', fontsize = 9)
