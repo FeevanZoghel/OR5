@@ -133,33 +133,11 @@ def calculate_tardiness1(volgorde, di_orders, di_machines, di_setups):
     return total_tardiness
 
 
-# --------------------------------------------------
-# BEGINOPLOSSING
-# --------------------------------------------------
-
-current = df_orders['Order'].tolist()
-
-random.shuffle(current)
-
-
-# --------------------------------------------------
-# PARAMETERS
-# --------------------------------------------------
-
-temp = 1000
-t_max = 10
-cooling_factor = 0.99
-cooling_it = 1000
-
-
-# --------------------------------------------------
-# SWAP
-# --------------------------------------------------
+# begin SA
 
 def swap(volgorde, i, j):
 
     nieuwe_volgorde = volgorde.copy()
-
     nieuwe_volgorde[i], nieuwe_volgorde[j] = (
         nieuwe_volgorde[j],
         nieuwe_volgorde[i]
@@ -171,30 +149,60 @@ def swap(volgorde, i, j):
 def random_swap(current):
 
     a = random.randint(0, len(current) - 1)
-
     b = random.randint(0, len(current) - 1)
 
     while a == b:
         b = random.randint(0, len(current) - 1)
-
     new_current = swap(current, a, b)
 
     return new_current
 
 
-# --------------------------------------------------
-# TESTEN VAN RANDOM SWAPS
-# --------------------------------------------------
 
-for i in range(t_max):
+def meta_annealing(df_orders, t_max, cooling_factor, cooling_it, temp):
+    
+    current = df_orders['Order'].tolist()
 
-    new_current = random_swap(current)
+    random.shuffle(current)
+    current_tard = calculate_tardiness1(current, di_orders, di_machines, di_setups)
 
-    new_tardiness = calculate_tardiness1(
-        new_current,
-        di_orders,
-        di_machines,
-        di_setups
-    )
+    best = current.copy()
+    best_tardiness = current_tard
 
-print("Nieuwe tardiness:", new_tardiness)
+    for i in range(t_max):
+
+        new_current = random_swap(current)
+        new_tard    = calculate_tardiness1(new_current, di_orders, di_machines, di_setups)
+        verschil    = current_tard-new_tard
+        
+        kans = m.exp(verschil / temp)
+
+        if verschil > 0:
+            current             = new_current.copy()
+            current_tard         = new_tard
+        else:
+            getal = np.random.choice([0, 1], p=[1-kans, kans])
+
+            # Slechtere oplossing toch accepteren
+            if getal == 1:
+                current = new_current.copy()
+                current_tard = new_tard
+
+        # Is current de beste oplossing die we ooit hebben gezien?
+        if current_tard < best_tardiness:
+            best = current.copy()
+            best_tardiness = current_tard
+
+        # Temperatuur na 1000 iteraties verlagen
+        if (i + 1) % cooling_it == 0:
+            temp = temp * cooling_factor
+    return(best, best_tardiness)
+
+
+t_max = 100000
+cooling_factor =0.99
+cooling_it = 100
+temp = 1000
+
+print(meta_annealing(df_orders, t_max, cooling_factor,cooling_it,temp))
+
