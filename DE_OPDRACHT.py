@@ -183,8 +183,8 @@ def calculate_tardiness(volgordes, di_orders, di_machines, di_setups):
                         tijden[machine_index] += setup['Setup time']
                         setup_gevonden = True
                         break
-                    
-                # geeft een foutmelding als er niet tussen bepaalde kleuren kan worden
+
+                # geeft een foutmelding als er niet tussen bepaalde kleuren kan worden geswapt
                 if setup_gevonden == False:
                     raise ValueError(
                         f"Geen setup gevonden van "
