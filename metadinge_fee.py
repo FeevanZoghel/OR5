@@ -351,8 +351,8 @@ tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_
 
 print(
     f'De beste lijst is {beste_volgorde}, '
-    f'met een totale tardiness van {tard} '
-    f'en {pen} aan penalty'
+    f'met een totale tardiness van {tard:.2f} '
+    f'en {pen:.2f} aan penalty'
 )
 
 def resultaten_naar_excel_list(
@@ -364,7 +364,9 @@ def resultaten_naar_excel_list(
     tardiness_per_order,
     penalty_per_order,
     machines_per_order,
-    bestandsnaam='Results.xlsx'
+    begintijden,
+    eindtijden,
+    bestandsnaam='Results_Metaheuristic_improved.xlsx'
 ):
     '''
     Zet de resultaten van de planning in een Excel-bestand.
@@ -383,12 +385,12 @@ def resultaten_naar_excel_list(
 
         orders_machine = []
 
-        for i in range(len(volgordes)):
+        for i in range(len(di_orders)):
 
             if machines_per_order[i] == machine:
-                orders_machine.append(volgordes[i])
+                orders_machine.append(di_orders[i]['Order'])
 
-        machine_nummers.append(machine + 1)
+        machine_nummers.append(di_machines[machine]['Machine'])
         order_volgorde.append(' -> '.join(orders_machine))
 
     df_MachineOrder = pd.DataFrame({
@@ -396,7 +398,7 @@ def resultaten_naar_excel_list(
         'Order machine': order_volgorde
     })
 
-    #Totale resultaten
+    # Totale resultaten
     df_totalen = pd.DataFrame({
         'Resultaat': [
             'Totale vertraging',
@@ -404,16 +406,21 @@ def resultaten_naar_excel_list(
         ],
         'Waarde': [
             round(total_tardiness, 4),
-            round(penalty,4)
+            round(penalty, 4)
         ]
     })
 
-    #Resultaten per order
+    # Resultaten per order
     orders_lijst = []
-    tardiness_lijst = []
-    penalty_tijd_lijst = []
-    tot_penalty_lijst = []
     machine_lijst = []
+    penalty_lijst = []
+    setup_lijst = []
+    start_lijst = []
+    process_lijst = []
+    end_lijst = []
+    deadline_lijst = []
+    tardiness_lijst = []
+    cost_lijst = []
 
     orders_dict = {}
 
@@ -422,45 +429,44 @@ def resultaten_naar_excel_list(
 
     for i in range(len(tardiness_per_order)):
 
-        order_nummer = volgordes[i]
+        order_nummer = di_orders[i]['Order']
         order = orders_dict[order_nummer]
 
+        start = begintijden[i]
+        end = eindtijden[i]
+
+        process = end - start
+
         orders_lijst.append(order_nummer)
+        machine_lijst.append(di_machines[machines_per_order[i]]['Machine'])
+        penalty_lijst.append(order['Penalty'])
+        setup_lijst.append(0)  # voorlopig
+        start_lijst.append(round(start, 2))
+        process_lijst.append(round(process, 2))
+        end_lijst.append(round(end, 2))
+        deadline_lijst.append(order['Deadline'])
         tardiness_lijst.append(round(tardiness_per_order[i], 2))
-        penalty_tijd_lijst.append(order['Penalty'])
-        tot_penalty_lijst.append(round(penalty_per_order[i], 2))
-        machine_lijst.append(machines_per_order[i] + 1)
+        cost_lijst.append(round(penalty_per_order[i], 2))
 
     df_resultaten = pd.DataFrame({
         'Order': orders_lijst,
-        'tardiness': tardiness_lijst,
-        'Penalty': penalty_tijd_lijst,
-        'Tot_penalty': tot_penalty_lijst, #pen x tard
         'Machine': machine_lijst,
-        'begintijd': [round(tijd, 2) for tijd in begintijden],
-        'eindtijd': [round(tijd, 2) for tijd in eindtijden]
+        'Penalty': penalty_lijst,
+        'SeqNo': orders_lijst,
+        'Setup': setup_lijst,
+        'Start': start_lijst,
+        'Process': process_lijst,
+        'End': end_lijst,
+        'Deadline': deadline_lijst,
+        'Tardiness': tardiness_lijst,
+        'Cost': cost_lijst
     })
 
-
-    #Excel bestan maken
+    # Excel bestand maken
     with pd.ExcelWriter(bestandsnaam) as writer:
-        df_resultaten.to_excel(writer, sheet_name = 'Resultaten orders', index = False)  
-        df_MachineOrder.to_excel(writer, sheet_name = 'Volgorde machines', index = False)
-        df_totalen.to_excel(writer, sheet_name = 'Totale resulaten', index = False)
-
-resultaten_naar_excel_list(di_orders, di_machines, oefen, tard, pen, tard_per_order, penalty_per_order, machines_per_order, 'Results_Metaheuristic.xlsx')
-
-resultaten_naar_excel_list(
-    di_orders,
-    di_machines,
-    beste_volgorde,
-    tard,
-    pen,
-    tard_per_order,
-    penalty_per_order,
-    machines_per_order,
-    'Results_Metaheuristic_improved.xlsx'
-)
+        df_resultaten.to_excel(writer, sheet_name='Schedule', index=False)
+        df_MachineOrder.to_excel(writer, sheet_name='Volgorde machines', index=False)
+        df_totalen.to_excel(writer, sheet_name='Totale resulaten', index=False)
 
 
 def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden):
