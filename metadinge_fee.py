@@ -11,6 +11,7 @@ df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
+print(df_machines)
 
 
 def dictionary(df):
