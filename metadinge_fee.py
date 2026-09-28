@@ -118,10 +118,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
                     break
 
             if not setup_gevonden:
-                raise ValueError(
-                    f"Geen setup gevonden van "
-                    f"{vorige_kleuren[machine_index]} naar {kleur}"
-                )
+                raise ValueError(f'Geen setup gevonden van "{vorige_kleuren[machine_index]} naar {kleur}"')
 
         # Productietijd
         productietijd = (order['Surface'] / di_machines[machine_index]['Speed'])
@@ -274,15 +271,9 @@ def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
 
     plt.figure(figsize=(12, 6))
 
-    plt.plot(
-        penalty_per_iteratie,
-        label='Penalty huidige swap'
-    )
+    plt.plot(penalty_per_iteratie, label='Penalty huidige swap')
 
-    plt.plot(
-        beste_penalty_per_iteratie,
-        label='Beste penalty'
-    )
+    plt.plot(beste_penalty_per_iteratie, label='Beste penalty')
 
     plt.xlabel('Iteratie')
     plt.ylabel('Totale penalty')
@@ -293,19 +284,13 @@ def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
 
     plt.show()
 
-plot_penalty(
-    penalty_per_iteratie,
-    beste_penalty_per_iteratie
-)
+plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie)
 
 tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
 
-print( f'De beste lijst is {beste_volgorde}, 'f'met een totale tardiness van {tard:.2f} 'f'en {pen:.2f} aan penalty')
+print( f'De beste lijst is {beste_volgorde}, \nmet een totale tardiness van {tard:.2f} \nen {pen:.2f} aan penalty')
 
-def resultaten_naar_excel_list(
-    di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden,
-    bestandsnaam='Results_Metaheuristic_improved.xlsx'
-):
+def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden,bestandsnaam='Results_Metaheuristic_improved.xlsx'):
     '''
     Zet de resultaten van de planning in een Excel-bestand.
 
@@ -338,27 +323,21 @@ def resultaten_naar_excel_list(
 
     # Totale resultaten
     df_totalen = pd.DataFrame({
-        'Resultaat': [
-            'Totale vertraging',
-            'Totale penalty'
-        ],
-        'Waarde': [
-            round(total_tardiness, 4),
-            round(penalty, 4)
-        ]
+        'Resultaat': ['Totale vertraging', 'Totale penalty'],
+        'Waarde': [round(total_tardiness, 4), round(penalty, 4)]
     })
 
     # Resultaten per order
-    orders_lijst = []
-    machine_lijst = []
-    penalty_lijst = []
-    setup_lijst = []
-    start_lijst = []
-    process_lijst = []
-    end_lijst = []
-    deadline_lijst = []
+    orders_lijst    = []
+    machine_lijst   = []
+    penalty_lijst   = []
+    setup_lijst     = []
+    start_lijst     = []
+    process_lijst   = []
+    end_lijst       = []
+    deadline_lijst  = []
     tardiness_lijst = []
-    cost_lijst = []
+    cost_lijst      = []
 
     orders_dict = {}
 
@@ -387,17 +366,17 @@ def resultaten_naar_excel_list(
         cost_lijst.append(round(penalty_per_order[i], 2))
 
     df_resultaten = pd.DataFrame({
-        'Order': orders_lijst,
-        'Machine': machine_lijst,
-        'Penalty': penalty_lijst,
-        'SeqNo': orders_lijst,
-        'Setup': setup_lijst,
-        'Start': start_lijst,
-        'Process': process_lijst,
-        'End': end_lijst,
-        'Deadline': deadline_lijst,
-        'Tardiness': tardiness_lijst,
-        'Cost': cost_lijst
+        'Order'     : orders_lijst,
+        'Machine'   : machine_lijst,
+        'Penalty'   : penalty_lijst,
+        'SeqNo'     : orders_lijst,
+        'Setup'     : setup_lijst,
+        'Start'     : start_lijst,
+        'Process'   : process_lijst,
+        'End'       : end_lijst,
+        'Deadline'  : deadline_lijst,
+        'Tardiness' : tardiness_lijst,
+        'Cost'      : cost_lijst
     })
 
     # Excel bestand maken
@@ -418,16 +397,16 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
     fig, ax = plt.subplots(figsize=(16, 7))
 
     kleur_dict = {
-        'Red': 'red',
-        'Blue': 'blue',
-        'Green': 'green',
+        'Red'   : 'red',
+        'Blue'  : 'blue',
+        'Green' : 'green',
         'Yellow': 'yellow',
         'Orange': 'orange',
         'Purple': 'purple',
-        'Pink': 'pink',
-        'Black': 'black',
-        'White': 'white',
-        'Grey': 'grey'
+        'Pink'  : 'pink',
+        'Black' : 'black',
+        'White' : 'white',
+        'Grey'  : 'grey'
     }
     orders = {} 
     for order in di_orders: 
