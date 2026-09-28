@@ -98,7 +98,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
         # Bij gelijke tijd: snelste machine
         machine_index = mogelijke_machines[0]
-
         for i in mogelijke_machines:
             if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
                 machine_index = i
@@ -122,7 +121,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         # Productietijd
         productietijd = (order['Surface'] / di_machines[machine_index]['Speed'])
         begintijd     = tijden[machine_index]
-
         tijden[machine_index] += productietijd
 
         # Eindtijd
@@ -131,17 +129,11 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         begintijden.append(begintijd)
         eindtijden.append(eindtijd)
 
-        # Tardiness
+        # Tardiness en penalty berekenen
         tardiness = max(0, eindtijd - order['Deadline'])
-
-        # Penalty van deze specifieke order
         penalty_order = tardiness * order['Penalty']
-
-        # Per order opslaan
         tard_per_order.append(tardiness)
         penalty_per_order.append(penalty_order)
-
-        # Alles bij elkaar optellen
         total_tardiness += tardiness
         penalty += penalty_order
 

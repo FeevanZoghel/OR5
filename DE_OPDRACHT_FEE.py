@@ -66,12 +66,9 @@ def plan_order(machine, order, tijd, vorige_kleur, di_setups):
         if setup_gevonden == False:
             raise ValueError(f'Geen setup gevonden van {vorige_kleur} naar {kleur}')
 
-    #begintijd van de order
+    #begintijd en productie tijd
     begintijd = tijd
-
-    # Productietijd
     tijd += order['Surface'] / machine['Speed']
-
     eindtijd = tijd
 
     # Tardiness --> Alleen de vertragingen worden meegenomen
@@ -125,7 +122,6 @@ def greedy_schedule(di_orders, di_machines, di_setups):
 
         # Bij gelijke tijd: snelste machine
         machine_index = mogelijke_machines[0]
-
         for i in mogelijke_machines:
             if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
                 machine_index = i
@@ -133,12 +129,7 @@ def greedy_schedule(di_orders, di_machines, di_setups):
 
         # Order op gekozen machine plannen
         tijden[machine_index], vorige_kleuren[machine_index], tard , penalty_order, begintijd, eindtijd = plan_order(
-            di_machines[machine_index],
-            order,
-            tijden[machine_index],
-            vorige_kleuren[machine_index],
-            di_setups
-        )
+            di_machines[machine_index], order, tijden[machine_index], vorige_kleuren[machine_index], di_setups)
 
         begintijden.append(begintijd)
         eindtijden.append(eindtijd) 
@@ -146,7 +137,6 @@ def greedy_schedule(di_orders, di_machines, di_setups):
         # Resultaten opslaan
         penalty  += penalty_order
         total_tardiness += tard
-
         volgordes[machine_index].append(order['Order'])
         tardiness[machine_index] += tard
         penalty_per_order.append(penalty_order)
@@ -183,7 +173,6 @@ def improving_search(di_orders, iterations):
 
     best_penalty = gegevens[4]
     best_tot_tard = gegevens[3]
-
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
     order_lijst = []
@@ -194,7 +183,6 @@ def improving_search(di_orders, iterations):
 
         # Planning opnieuw maken met greedy
         gegevens = greedy_schedule(current, di_machines, di_setups)
-
         current_penalty = gegevens[4]
 
         # Penalty van ELKE geteste swap opslaan
@@ -202,11 +190,9 @@ def improving_search(di_orders, iterations):
 
         # Alleen accepteren als deze beter is
         if current_penalty < best_penalty:
-
             best_penalty = current_penalty
             best_tot_tard = gegevens[3]
             beste_volgorde = current.copy()
-
             order_lijst.append([order['Order'] for order in beste_volgorde])
 
         # Beste penalty na iedere iteratie opslaan
