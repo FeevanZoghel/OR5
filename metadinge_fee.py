@@ -222,7 +222,7 @@ def meta_improving_search(df_orders, iterations):
     current = df_orders['Order'].tolist()
 
     # SA gegevens
-    t_max = 10000
+    t_max = 1000
     cooling_factor = 0.99
     cooling_it = 1000
     temp = 1000
@@ -293,7 +293,7 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
         3. Totale resultaten
     '''
 
-    # Volgorde per machine
+    # Volgorde per machine en orde
     machine_nummers = []
     order_volgorde = []
 
@@ -339,7 +339,7 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
 
     for i in range(len(tardiness_per_order)):
 
-        order_nummer = di_orders[i]['Order']
+        order_nummer = volgordes[i]
         order = orders_dict[order_nummer]
 
         start = begintijden[i]
@@ -356,7 +356,7 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
         end_lijst.append(round(end, 2))
         deadline_lijst.append(order['Deadline'])
         tardiness_lijst.append(round(tardiness_per_order[i], 2))
-        cost_lijst.append(round(penalty_per_order[i], 2))
+        cost_lijst.append(round(penalty_per_order[i], 4))
 
     df_resultaten = pd.DataFrame({
         'Order'     : orders_lijst,
