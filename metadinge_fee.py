@@ -227,13 +227,7 @@ def meta_improving_search(df_orders, iterations):
     temp = 1000
 
     # Eerst SA uitvoeren
-    beste_volgorde, best_penalty, best_tot_tard = SA(
-        df_orders,
-        t_max,
-        cooling_factor,
-        cooling_it,
-        temp
-    )
+    beste_volgorde, best_penalty, best_tot_tard = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
@@ -384,7 +378,7 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
         df_totalen.to_excel(writer, sheet_name='Totale resulaten', index=False)
 
 
-def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden):
+def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tardiness, penalty):
     '''
     Maakt een Gantt-chart van de planning.
 
@@ -437,7 +431,10 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
     ax.set_ylabel('Machine')
     ax.set_title('Gantt-chart planning')
 
+    ax.text(1, 1, f'Totale penalty: {penalty:.2f}\nTotale tardiness: {tardiness:.2f}', transform=ax.transAxes, ha='right', va='bottom', fontsize=11)
+   
+
     plt.tight_layout()
     plt.show()
 
-gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden)
+gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tard, pen)
