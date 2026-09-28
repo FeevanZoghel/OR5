@@ -108,11 +108,9 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         # Setup time bij een kleurverandering
         if (vorige_kleuren[machine_index] is not None
                 and kleur != vorige_kleuren[machine_index]):
-
             setup_gevonden = False
 
             for setup in di_setups:
-
                 if (setup['From colour'] == vorige_kleuren[machine_index]
                         and setup['To colour'] == kleur):
 
@@ -148,7 +146,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         tard_per_order.append(tardiness)
         penalty_per_order.append(penalty_order)
 
-        # Totalen
+        # Alles bij elkaar optellen
         total_tardiness += tardiness
         penalty += penalty_order
 
@@ -162,11 +160,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 def swap(volgorde, i, j):
 
     nieuwe_volgorde = volgorde.copy()
-    nieuwe_volgorde[i], nieuwe_volgorde[j] = (
-        nieuwe_volgorde[j],
-        nieuwe_volgorde[i]
-    )
-
+    nieuwe_volgorde[i], nieuwe_volgorde[j] = (nieuwe_volgorde[j], nieuwe_volgorde[i])
     return nieuwe_volgorde
 
 
@@ -223,15 +217,10 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
             temp = temp * cooling_factor
 
     # Tardiness van de beste gevonden volgorde opnieuw berekenen
-    best_tardiness, _, _, _, _, _, _ = calculate_tard_pen(
-        best,
-        di_orders,
-        di_machines,
-        di_setups
-    )
+    best_tardiness, _, _, _, _, _, _ = calculate_tard_pen(best, di_orders, di_machines, di_setups)
     return(best, best_penalty, best_tardiness)
 
-
+#PARAMETERS
 t_max = 10000
 cooling_factor =0.99
 cooling_it = 1000
@@ -245,7 +234,7 @@ def meta_improving_search(df_orders, iterations):
     current = df_orders['Order'].tolist()
 
     # SA gegevens
-    t_max = 1000000
+    t_max = 10000
     cooling_factor = 0.99
     cooling_it = 1000
     temp = 1000
@@ -269,27 +258,13 @@ def meta_improving_search(df_orders, iterations):
         current = random_swap(beste_volgorde)
 
         # Planning van deze nieuwe volgorde berekenen
-        (
-            current_tard,
-            current_penalty,
-            _,
-            _,
-            _,
-            _,
-            _
-        ) = calculate_tard_pen(
-            current,
-            di_orders,
-            di_machines,
-            di_setups
-        )
+        (current_tard, current_penalty, _, _, _, _, _) = calculate_tard_pen(current, di_orders, di_machines, di_setups)
 
         # Penalty van deze swap bewaren
         penalty_per_iteratie.append(current_penalty)
 
         # Alleen accepteren als de nieuwe volgorde beter is
         if current_penalty < best_penalty:
-
             best_penalty = current_penalty
             best_tot_tard = current_tard
             beste_volgorde = current.copy()
@@ -299,20 +274,9 @@ def meta_improving_search(df_orders, iterations):
         # Beste penalty tot nu toe bewaren
         beste_penalty_per_iteratie.append(best_penalty)
 
-    return (
-        best_tot_tard,
-        best_penalty,
-        beste_volgorde,
-        penalty_per_iteratie,
-        beste_penalty_per_iteratie
-    )
-(
-    best_tardiness,
-    best_penalty,
-    beste_volgorde,
-    penalty_per_iteratie,
-    beste_penalty_per_iteratie
-) = meta_improving_search(df_orders, 1000)
+    return (best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie)
+
+(best_tardiness, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie) = meta_improving_search(df_orders, 1000)
 
 def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
 
@@ -342,30 +306,12 @@ plot_penalty(
     beste_penalty_per_iteratie
 )
 
-tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_per_order = calculate_tard_pen(
-    beste_volgorde,
-    di_orders,
-    di_machines,
-    di_setups
-)
+tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
 
-print(
-    f'De beste lijst is {beste_volgorde}, '
-    f'met een totale tardiness van {tard:.2f} '
-    f'en {pen:.2f} aan penalty'
-)
+print( f'De beste lijst is {beste_volgorde}, 'f'met een totale tardiness van {tard:.2f} 'f'en {pen:.2f} aan penalty')
 
 def resultaten_naar_excel_list(
-    di_orders,
-    di_machines,
-    volgordes,
-    total_tardiness,
-    penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    begintijden,
-    eindtijden,
+    di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden,
     bestandsnaam='Results_Metaheuristic_improved.xlsx'
 ):
     '''
@@ -525,11 +471,4 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
     plt.tight_layout()
     plt.show()
 
-gantt_chart_list(
-    beste_volgorde,
-    di_orders,
-    di_machines,
-    machines_per_order,
-    begintijden,
-    eindtijden
-)
+gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden)
