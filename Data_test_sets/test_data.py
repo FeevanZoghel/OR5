@@ -31,17 +31,15 @@ def check_columns(df):
 
     fout = False
 
-    # Ontbrekende kolommen
-    for column in good_columns:
-        if column not in columns:
-            st.error(f'Kolom "{column}" ontbreekt.')
-            fout = True
+    if len(columns) != len(good_columns):
+        st.error("The number of columns is incorrect")
+        fout = True
 
-    # Onbekende/verkeerde kolommen
-    for column in columns:
-        if column not in good_columns:
-            st.error(f'Kolom "{column}" is onbekend.')
-            fout = True
+    else:
+        for i in range(len(columns)):
+            if columns[i] != good_columns[i]:
+                st.error(f'Column "{columns[i]}" is wrong. It should be "{good_columns[i]}".')
+                fout = True
 
     if fout is False:
         st.success('Alle kolommen zijn correct.')
