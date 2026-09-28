@@ -4,8 +4,6 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
-
-
 random.seed(42)
 
 df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
@@ -197,7 +195,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
             current              = new_current.copy()
             current_penalty         = new_penalty
         else:
-            getal = np.random.choice([0, 1], p=[1-kans, kans])
+            getal = random.choices([0, 1], weights=[1-kans, kans])[0]
 
             # Slechtere oplossing toch accepteren
             if getal == 1:
@@ -296,7 +294,7 @@ plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie)
 
 tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
 
-print( f'De beste lijst is {beste_volgorde}, \nmet een totale tardiness van {tard:.2f} \nen {pen:.2f} aan penalty')
+print(f'De beste lijst is {beste_volgorde}, \nmet een totale tardiness van {tard:.2f} \nen {pen:.2f} aan penalty')
 
 def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden,bestandsnaam='Results_Metaheuristic_improved.xlsx'):
     '''
