@@ -55,8 +55,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
     # Huidige tijd per machine
     tijden = [0] * aantal_machines
-
-    # Laatste kleur per machine
     vorige_kleuren = [None] * aantal_machines
 
     # Totale tardiness
@@ -83,14 +81,12 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         laagste_tijd = min(tijden)
 
         mogelijke_machines = []
-
         for i in range(aantal_machines):
             if tijden[i] == laagste_tijd:
                 mogelijke_machines.append(i)
 
         # Bij gelijke tijd: snelste machine
         machine_index = mogelijke_machines[0]
-
         for i in mogelijke_machines:
             if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
                 machine_index = i
@@ -98,14 +94,11 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         # Setup time bij een kleurverandering
         if (vorige_kleuren[machine_index] is not None
                 and kleur != vorige_kleuren[machine_index]):
-
             setup_gevonden = False
 
             for setup in di_setups:
-
                 if (setup['From colour'] == vorige_kleuren[machine_index]
                         and setup['To colour'] == kleur):
-
                     tijden[machine_index] += setup['Setup time']
                     setup_gevonden = True
                     break
@@ -149,10 +142,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 def swap(volgorde, i, j):
 
     nieuwe_volgorde = volgorde.copy()
-    nieuwe_volgorde[i], nieuwe_volgorde[j] = (
-        nieuwe_volgorde[j],
-        nieuwe_volgorde[i]
-    )
+    nieuwe_volgorde[i], nieuwe_volgorde[j] = (nieuwe_volgorde[j], nieuwe_volgorde[i])
 
     return nieuwe_volgorde
 
@@ -200,7 +190,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
                 current = new_current.copy()
                 current_penalty = new_penalty
 
-        # Is current de beste oplossing die we ooit hebben gezien?
+        # Is current de beste oplossing van alles?
         if current_penalty < best_penalty:
             best = current.copy()
             best_penalty = current_penalty
@@ -211,7 +201,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     return(best, best_penalty)
 
 
-t_max = 1000000
+t_max = 10000
 cooling_factor =0.99
 cooling_it = 1000
 temp = 1000
