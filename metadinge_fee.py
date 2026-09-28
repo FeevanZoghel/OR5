@@ -4,6 +4,9 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
+
+
+
 random.seed(42)
 
 df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
@@ -376,7 +379,7 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
 resultaten_naar_excel_list(di_orders,di_machines, beste_volgorde, tard, pen, tard_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden)
 
 
-def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tardiness, penalty):
+def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tardiness, penalty, tardiness_per_order):
     '''
     Maakt een Gantt-chart van de planning.
 
@@ -387,7 +390,7 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
     fig, ax = plt.subplots(figsize=(16, 7))
 
     kleur_dict = {
-        'Red'   : 'red',
+        'Red'   : 'firebrick',
         'Blue'  : 'blue',
         'Green' : 'green',
         'Yellow': 'yellow',
@@ -398,6 +401,8 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
         'White' : 'white',
         'Grey'  : 'grey'
     }
+    
+
     orders = {} 
     for order in di_orders: 
         orders[order['Order']] = order
@@ -412,8 +417,15 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
         order = orders[volgorde[i]]
         kleur_order = order['Colour']
 
+        if tardiness_per_order[i] > 0:
+            edgecolor = '#FF073A'
+            linewidth = 4
+        else:
+            edgecolor = 'black'
+            linewidth = 1
+        
         # Balk tekenen
-        ax.barh(machine, duur, left=begintijd, height = 0.6,color = kleur_dict[kleur_order], edgecolor = 'black')
+        ax.barh(machine, duur, left=begintijd, height = 0.6,color = kleur_dict[kleur_order], edgecolor = edgecolor, alpha = 0.6)
 
         # Ordernummer in de balk zetten
         ax.text(begintijd + duur / 2, machine, str(order['Order']), ha='center', va='center', fontsize = 9)
@@ -435,4 +447,4 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begin
     plt.tight_layout()
     plt.show()
 
-gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tard, pen)
+gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tard, pen, tard_per_order)
