@@ -3,6 +3,8 @@
 
 # pylint: disable=no-member
 
+from Testen import check_all
+
 import streamlit as st
 import pandas as pd
 

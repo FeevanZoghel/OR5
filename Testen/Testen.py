@@ -1,10 +1,5 @@
 import pandas as pd
-import numpy as np
-import random
-import math as m
-import matplotlib.pyplot as plt
-
-random.seed(42)
+import streamlit as st
 
 testbestand = 'Test01_HappyFlow.xlsx'
 
