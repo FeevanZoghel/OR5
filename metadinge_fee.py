@@ -283,99 +283,97 @@ tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_
 
 print(f'De beste lijst is {beste_volgorde}, \nmet een totale tardiness van {tard:.2f} \nen {pen:.2f} aan penalty')
 
-def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden,bestandsnaam='Results_Metaheuristic_improved.xlsx'):
+def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden, bestandsnaam='Results_Metaheuristic_improved.xlsx'):
     '''
-    Zet de resultaten van de planning in een Excel-bestand.
+    Zet de resultaten van de planning in één Excel-tabel.
 
-    Het Excel-bestand bevat drie tabbladen:
-        1. Resultaten orders
-        2. Volgorde machines
-        3. Totale resultaten
+    Kolommen:
+        Order      : Order name
+        Machine    : Machine name
+        SeqNo      : Sequence number on the machine
+        Setup      : Setup time before painting
+        Start      : Painting start time
+        Process    : Painting time
+        End        : Painting completion time
+        Deadline   : Order deadline
+        Tardiness  : Delay of the order
+        Penalty    : Unit penalty cost
+        Cost       : Total penalty cost for the order
     '''
 
-    # Volgorde per machine en orde
-    machine_nummers = []
-    order_volgorde = []
-
-    for machine in range(len(di_machines)):
-
-        orders_machine = []
-
-        for i in range(len(di_orders)):
-
-            if machines_per_order[i] == machine:
-                orders_machine.append(di_orders[i]['Order'])
-
-        machine_nummers.append(di_machines[machine]['Machine'])
-        order_volgorde.append(' -> '.join(orders_machine))
-
-    df_MachineOrder = pd.DataFrame({
-        'Machine_number': machine_nummers,
-        'Order machine': order_volgorde
-    })
-
-    # Totale resultaten
-    df_totalen = pd.DataFrame({
-        'Resultaat': ['Totale vertraging', 'Totale penalty'],
-        'Waarde': [round(total_tardiness, 4), round(penalty, 4)]
-    })
-
-    # Resultaten per order
-    orders_lijst    = []
-    machine_lijst   = []
-    penalty_lijst   = []
-    setup_lijst     = []
-    start_lijst     = []
-    process_lijst   = []
-    end_lijst       = []
-    deadline_lijst  = []
-    tardiness_lijst = []
-    cost_lijst      = []
-
+    # Orders opzoeken via ordernummer
     orders_dict = {}
 
     for order in di_orders:
         orders_dict[order['Order']] = order
+
+    # Resultaten per order
+    orders_lijst = []
+    machine_lijst = []
+    seqno_lijst = []
+    setup_lijst = []
+    start_lijst = []
+    process_lijst = []
+    end_lijst = []
+    deadline_lijst = []
+    tardiness_lijst = []
+    penalty_lijst = []
+    cost_lijst = []
+
+    # Houdt bij hoeveel orders iedere machine al heeft
+    sequence = [0] * len(di_machines)
 
     for i in range(len(tardiness_per_order)):
 
         order_nummer = volgordes[i]
         order = orders_dict[order_nummer]
 
+        machine_index = machines_per_order[i]
+        machine = di_machines[machine_index]['Machine']
+
+        # Sequence number per machine
+        sequence[machine_index] += 1
+        seqno = sequence[machine_index]
+
         start = begintijden[i]
         end = eindtijden[i]
-
         process = end - start
 
         orders_lijst.append(order_nummer)
-        machine_lijst.append(di_machines[machines_per_order[i]]['Machine'])
-        penalty_lijst.append(order['Penalty'])
+        machine_lijst.append(machine)
+        seqno_lijst.append(seqno)
         setup_lijst.append(0)  # voorlopig
         start_lijst.append(round(start, 2))
         process_lijst.append(round(process, 2))
         end_lijst.append(round(end, 2))
         deadline_lijst.append(order['Deadline'])
-        tardiness_lijst.append(round(tardiness_per_order[i], 2))
-        cost_lijst.append(round(penalty_per_order[i], 4))
+        tardiness_lijst.append(round(tardiness_per_order[i], 4))
+        penalty_lijst.append(order['Penalty'])
+        cost_lijst.append(round(penalty_per_order[i], 2))
 
+    # Eén tabel
     df_resultaten = pd.DataFrame({
-        'Order'     : orders_lijst,
-        'Machine'   : machine_lijst,
-        'SeqNo'     : orders_lijst,
-        'Setup'     : setup_lijst,
-        'Start'     : start_lijst,
-        'Process'   : process_lijst,
-        'End'       : end_lijst,
-        'Deadline'  : deadline_lijst,
-        'Tardiness' : tardiness_lijst,
-        'Cost'      : cost_lijst
+        'Order': orders_lijst,
+        'Machine': machine_lijst,
+        'SeqNo': seqno_lijst,
+        'Setup': setup_lijst,
+        'Start': start_lijst,
+        'Process': process_lijst,
+        'End': end_lijst,
+        'Deadline': deadline_lijst,
+        'Tardiness': tardiness_lijst,
+        'Penalty': penalty_lijst,
+        'Cost': cost_lijst
     })
 
     # Excel bestand maken
-    with pd.ExcelWriter(bestandsnaam) as writer:
-        df_resultaten.to_excel(writer, sheet_name='Schedule', index=False)
-        df_MachineOrder.to_excel(writer, sheet_name='Schedule', index=False)
-        df_totalen.to_excel(writer, sheet_name='Schedule', index=False)
+    df_resultaten.to_excel(
+        bestandsnaam,
+        sheet_name='Schedule',
+        index=False
+    )
+
+resultaten_naar_excel_list(di_orders,di_machines, beste_volgorde, tard, pen, tard_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden)
 
 
 def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden,tardiness, penalty):
