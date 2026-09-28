@@ -1,5 +1,6 @@
 import streamlit as st
 
+# pylint: disable=no-member
 
 def only_check_columns(df):
     '''
