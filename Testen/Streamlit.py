@@ -1,9 +1,16 @@
 #URL:
 #https://totestdataset.streamlit.app/
 
+# pylint: disable=no-member
+
 import streamlit as st
 import pandas as pd
 
-st.sidebar.title("Menu")
+st.header('Data check')
 
-st.header("werkt het al?")
+bestand = st.file_uploader('Upload een planning', type=['xlsx'])
+
+if bestand is not None:
+    df = pd.read_excel(bestand)
+
+    check_all(df)
