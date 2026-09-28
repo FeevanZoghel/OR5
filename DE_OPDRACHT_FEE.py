@@ -26,12 +26,9 @@ def dictionary(df):
 
     for i in range(len(df)):
         job = {}
-
         for column in df.columns:
             job[column] = df[column][i]
-
         jobs.append(job)
-
     return jobs
 
 di_orders_org = dictionary(df_orders)
@@ -116,16 +113,13 @@ def greedy_schedule(di_orders, di_machines, di_setups):
     penalty             = 0
 
     for order in di_orders:
-
         # Machine met laagste huidige tijd
         laagste_tijd = min(tijden)
-
 
         # Machines met de laagste huidige eindtijd, die we de order laten uitvoeren
         mogelijke_machines = []
 
         for i in range(len(di_machines)):
-        
             if tijden[i] == laagste_tijd:
                 mogelijke_machines.append(i)
 
@@ -160,15 +154,7 @@ def greedy_schedule(di_orders, di_machines, di_setups):
 
     return (volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden)
 
-(volgordes, 
- tijden, 
- tardiness, 
- total_tardiness, 
- penalty, 
- penalty_per_order, 
- tardiness_per_order, 
- machines_per_order, 
- begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
+(volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
 
 def swap(volgorde, i, j):
     nieuwe_volgorde = volgorde.copy()
@@ -176,24 +162,18 @@ def swap(volgorde, i, j):
     return nieuwe_volgorde
 
 def random_swap(current):
-
     nieuwe_volgorde = current.copy()
-
     a = random.randint(0, len(nieuwe_volgorde) - 1)
     b = random.randint(0, len(nieuwe_volgorde) - 1)
 
     while a == b:
         b = random.randint(0, len(nieuwe_volgorde) - 1)
 
-    nieuwe_volgorde[a], nieuwe_volgorde[b] = (
-        nieuwe_volgorde[b],
-        nieuwe_volgorde[a]
-    )
+    nieuwe_volgorde[a], nieuwe_volgorde[b] = (nieuwe_volgorde[b], nieuwe_volgorde[a])
 
     return nieuwe_volgorde
 
 def improving_search(di_orders, iterations):
-
     # Beginvolgorde
     current = di_orders.copy()
     beste_volgorde = current.copy()
@@ -209,7 +189,6 @@ def improving_search(di_orders, iterations):
     order_lijst = []
 
     for _ in range(iterations):
-
         # Swap vanaf beste oplossing
         current = random_swap(beste_volgorde)
 
@@ -228,42 +207,21 @@ def improving_search(di_orders, iterations):
             best_tot_tard = gegevens[3]
             beste_volgorde = current.copy()
 
-            order_lijst.append(
-                [order['Order'] for order in beste_volgorde]
-            )
+            order_lijst.append([order['Order'] for order in beste_volgorde])
 
         # Beste penalty na iedere iteratie opslaan
         beste_penalty_per_iteratie.append(best_penalty)
 
-    return (
-        best_tot_tard,
-        best_penalty,
-        beste_volgorde,
-        penalty_per_iteratie,
-        beste_penalty_per_iteratie
-    )
+    return (best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie)
 
-(
-    best_tot_tard,
-    best_penalty,
-    beste_volgorde,
-    penalty_per_iteratie,
-    beste_penalty_per_iteratie
-) = improving_search(di_orders, 1000)
+(best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie) = improving_search(di_orders, 1000)
 
 def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
-
     plt.figure(figsize=(12, 6))
 
-    plt.plot(
-        penalty_per_iteratie,
-        label='Penalty huidige swap'
-    )
+    plt.plot(penalty_per_iteratie, label='Penalty huidige swap')
 
-    plt.plot(
-        beste_penalty_per_iteratie,
-        label='Beste penalty'
-    )
+    plt.plot(beste_penalty_per_iteratie, label='Beste penalty')
 
     plt.xlabel('Iteratie')
     plt.ylabel('Totale penalty')
@@ -274,193 +232,128 @@ def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
 
     plt.show()
 
-plot_penalty(
-    penalty_per_iteratie,
-    beste_penalty_per_iteratie
-)
+plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie)
 
-def resultaten_naar_excel(
-    di_orders,
-    di_machines,
-    volgordes,
-    total_tardiness,
-    penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    begintijden,
-    eindtijden,
-    bestandsnaam='Results.xlsx'
-):
+def resultaten_naar_excel(di_orders, di_machines, di_setups, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden, bestandsnaam='Results.xlsx'):
     '''
     Zet de resultaten van de planning in een Excel-bestand.
 
-    Het tabblad Schedule heeft de structuur die nodig is
-    voor de PaintShop Schedule Checker.
+    Het Excel-bestand bevat twee tabbladen:
+        1. Schedule
+        2. Totale resultaten
+
+    De Schedule bevat de kolommen: Order, Machine, SeqNo, Setup, Start, Process, End, Deadline, Tardiness, Penalty, Cost
     '''
 
-    # Volgnummer per machine bijhouden
+    # Orders makkelijk kunnen opzoeken
+    orders = {}
+
+    for order in di_orders:
+        orders[order['Order']] = order
+
+
+    # Lijsten voor de resultaten
+    orders_lijst        = []
+    machine_lijst       = []
+    seqno_lijst         = []
+    setup_lijst         = []
+    start_lijst         = []
+    process_lijst       = []
+    end_lijst           = []
+    deadline_lijst      = []
+    tardiness_lijst     = []
+    penalty_lijst       = []
+    cost_lijst          = []
+
     sequence_per_machine = [0] * len(di_machines)
 
-    # Vorige kleur per machine bijhouden
-    vorige_kleur = [None] * len(di_machines)
+    vorige_kleuren = [None] * len(di_machines)
 
-    # Lijsten voor Schedule
-    orders_lijst = []
-    machine_lijst = []
-    seqno_lijst = []
-    setup_lijst = []
-    start_lijst = []
-    process_lijst = []
-    end_lijst = []
-    deadline_lijst = []
-    tardiness_lijst = []
-    penalty_lijst = []
-    cost_lijst = []
+    for i in range(len(volgordes)):
+        order_nummer = volgordes[i]
 
-    for i in range(len(di_orders)):
+        order = orders[order_nummer]
 
-        order = di_orders[i]
         machine_index = machines_per_order[i]
 
-        # -------------------------
-        # Order
-        # -------------------------
-        orders_lijst.append(order['Order'])
+        orders_lijst.append(order_nummer)
 
-        # -------------------------
-        # Machine
-        # -------------------------
-        machine_lijst.append(machine_index + 1)
+        machine_lijst.append(di_machines[machine_index]['Machine'])
 
-        # -------------------------
-        # Sequence number
-        # -------------------------
         sequence_per_machine[machine_index] += 1
+
         seqno_lijst.append(sequence_per_machine[machine_index])
 
-        # -------------------------
-        # Setup time
-        # -------------------------
         setup_tijd = 0
 
-        if vorige_kleur[machine_index] is not None:
+        if (vorige_kleuren[machine_index] is not None and order['Colour'] != vorige_kleuren[machine_index]):
+            
+            setup_gevonden = False
 
-            if vorige_kleur[machine_index] != order['Colour']:
+            for setup in di_setups:
 
-                for setup in di_setups:
+                if (setup['From colour'] == vorige_kleuren[machine_index] and setup['To colour'] == order['Colour']):
 
-                    if (
-                        setup['From colour'] == vorige_kleur[machine_index]
-                        and setup['To colour'] == order['Colour']
-                    ):
-                        setup_tijd = setup['Setup time']
-                        break
+                    setup_tijd = setup['Setup time']
+                    setup_gevonden = True
+                    break
 
-        setup_lijst.append(round(setup_tijd, 2))
+            if setup_gevonden is False:
 
-        vorige_kleur[machine_index] = order['Colour']
+                raise ValueError(f"Geen setup gevonden van \n{vorige_kleuren[machine_index]} \nnaar {order['Colour']}")
 
-        # -------------------------
-        # Start
-        # -------------------------
+        setup_lijst.append(int(setup_tijd))
+
         start_lijst.append(round(begintijden[i], 2))
 
-        # -------------------------
-        # Process time
-        # -------------------------
-        process_tijd = (
-            order['Surface']
-            / di_machines[machine_index]['Speed']
-        )
+        process_tijd = (order['Surface'] / di_machines[machine_index]['Speed'])
 
         process_lijst.append(round(process_tijd, 2))
 
-        # -------------------------
-        # End
-        # -------------------------
         end_lijst.append(round(eindtijden[i], 2))
 
-        # -------------------------
-        # Deadline
-        # -------------------------
-        deadline_lijst.append(order['Deadline'])
+        deadline_lijst.append(int(order['Deadline']))
 
-        # -------------------------
-        # Tardiness
-        # -------------------------
-        tardiness_lijst.append(
-            round(tardiness_per_order[i], 2)
-        )
+        tardiness_lijst.append(round(tardiness_per_order[i], 2))
 
-        # -------------------------
-        # Penalty factor
-        # -------------------------
-        penalty_lijst.append(order['Penalty'])
+        penalty_lijst.append(int(order['Penalty']))
 
-        # -------------------------
-        # Cost = tardiness * penalty
-        # -------------------------
-        cost_lijst.append(
-            round(penalty_per_order[i], 2)
-        )
+        cost = (tardiness_per_order[i] * order['Penalty'])
 
-    # Schedule dataframe
+        cost_lijst.append(round(cost, 2))
+
+        vorige_kleuren[machine_index] = order['Colour']
+
     df_schedule = pd.DataFrame({
-        'Order': orders_lijst,
-        'Machine': machine_lijst,
-        'SeqNo': seqno_lijst,
-        'Setup': setup_lijst,
-        'Start': start_lijst,
-        'Process': process_lijst,
-        'End': end_lijst,
-        'Deadline': deadline_lijst,
-        'Tardiness': tardiness_lijst,
-        'Penalty': penalty_lijst,
-        'Cost': cost_lijst
+        'Order'     : orders_lijst,
+        'Machine'   : machine_lijst,
+        'SeqNo'     : seqno_lijst,
+        'Setup'     : setup_lijst,
+        'Start'     : start_lijst,
+        'Process'   : process_lijst,
+        'End'       : end_lijst,
+        'Deadline'  : deadline_lijst,
+        'Tardiness' : tardiness_lijst,
+        'Penalty'   : penalty_lijst,
+        'Cost'      : cost_lijst
     })
 
-    # Totale resultaten
     df_totalen = pd.DataFrame({
-        'Resultaat': [
-            'Totale vertraging',
-            'Totale penalty'
-        ],
-        'Waarde': [
-            round(total_tardiness, 4),
-            round(penalty, 4)
-        ]
+        'Resultaat': ['Totale vertraging', 'Totale penalty'],
+
+        'Waarde': [round(total_tardiness, 4),round(penalty, 4)]
     })
 
-    # Excel maken
+    if not bestandsnaam.endswith('.xlsx'):
+        bestandsnaam += '.xlsx'
+
     with pd.ExcelWriter(bestandsnaam) as writer:
 
-        df_schedule.to_excel(
-            writer,
-            sheet_name='Schedule',
-            index=False
-        )
+        df_schedule.to_excel(writer, sheet_name='Schedule', index=False)
 
-        df_totalen.to_excel(
-            writer,
-            sheet_name='Totale resultaten',
-            index=False
-        )
+        df_totalen.to_excel(writer, sheet_name='Totale resultaten', index=False)
 
-resultaten_naar_excel(
-    di_orders,
-    di_machines,
-    volgordes,
-    total_tardiness,
-    penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    begintijden,
-    eindtijden,
-    'Results_greedy.xlsx'
-)
-
+resultaten_naar_excel(di_orders,di_machines,di_setups, [order['Order'] for order in di_orders], total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden, 'Results_greedy.xlsx')
 
 
 def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden):
@@ -474,16 +367,16 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
     fig, ax = plt.subplots(figsize=(13, 7))
 
     kleur_dict = {
-        'Red': 'red',
-        'Blue': 'blue',
-        'Green': 'green',
+        'Red'   : 'red',
+        'Blue'  : 'blue',
+        'Green' : 'green',
         'Yellow': 'yellow',
         'Orange': 'orange',
         'Purple': 'purple',
-        'Pink': 'pink',
-        'Black': 'black',
-        'White': 'white',
-        'Grey': 'grey'
+        'Pink'  : 'pink',
+        'Black' : 'black',
+        'White' : 'white',
+        'Grey'  : 'grey'
     }
 
     for i in range(len(di_orders)):
