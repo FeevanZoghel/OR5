@@ -4,24 +4,20 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
+
+
 random.seed(42)
 
-testbestand = 'Test01_HappyFlow.xlsx'
-
-df = pd.read_excel(f'Testen/{testbestand}', sheet_name=None)
+df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
-df_setups= df['Setups']
+df_setups = df['Setups']
 
 
 def dictionary(df):
-
     '''
-    Zet de dataframes over naar een dictionary
-
-    Return:
-        Een lijst met dictionaries
+    Zet een dataframe om naar een lijst van dictionaries.
     '''
 
     jobs = []
@@ -36,6 +32,7 @@ def dictionary(df):
 
     return jobs
 
+
 di_orders_org = dictionary(df_orders)
 di_machines_org = dictionary(df_machines)
 di_setups_org = dictionary(df_setups)
@@ -48,88 +45,56 @@ di_orders.sort(key=lambda job: job['Deadline'])
 
 
 
-def plan_order(machine, order, tijd, vorige_kleur, di_setups):
+def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
     '''
-    Berekening voor de tardiness
+    Berekent de tardiness en penalty van een gegeven ordervolgorde.
+    Orders worden verdeeld over de machines op basis van de
+    laagste huidige machinetijd.
 
     Return:
-        Tijd        : productietijd
-        Kleur       : De volgorde van kleuren in de orders
-        Tardiness   : De tardiness
-        Penaltyorder: Penaltyscore van de tardiness.
+        total_tardiness    : Totale tardiness
+        penalty            : Totale penalty
+        machines_per_order : Machine per order
+        begintijden        : Begintijd per order
+        eindtijden         : Eindtijd per order
+        tard_per_order     : Tardiness per order
+        penalty_per_order  : Penalty per order
     '''
 
-    kleur = order['Colour']
-    setup_gevonden = False
+    aantal_machines = len(di_machines)
 
-    # Extra tijd voor kleur verandering
-    if vorige_kleur != None and kleur != vorige_kleur:
-        for setup in di_setups:
-            if setup['From colour'] == vorige_kleur and setup['To colour'] == kleur:
-                tijd += setup['Setup time']
-                setup_gevonden = True
-                break
-        if setup_gevonden == False:
-            raise ValueError(f'Geen setup gevonden van {vorige_kleur} naar {kleur}')
+    tijden = [0] * aantal_machines
+    vorige_kleuren = [None] * aantal_machines
 
-    #begintijd van de order
-    begintijd = tijd
 
-    # Productietijd
-    tijd += order['Surface'] / machine['Speed']
+    # Totale tardiness
+    total_tardiness = 0
+    penalty = 0
+    machines_per_order = []
+    begintijden = []
+    eindtijden = []
+    penalty_per_order = []
+    tard_per_order = []
 
-    eindtijd = tijd
-
-    # Tardiness --> Alleen de vertragingen worden meegenomen
-    tardiness       = max(0, tijd - order['Deadline'])
-    penaltyorder    = order['Penalty']*tardiness
-
-    return tijd, kleur, tardiness, penaltyorder, begintijd, eindtijd
-
-def greedy_schedule(di_orders, di_machines, di_setups):
-    '''
-    Maakt een planning met behulp van de greedy methode.
-
-    De orders worden gesorteerd op deadline.
-    Elke order wordt toegewezen aan de machine met de laagste huidige tijd.
-    Bij gelijke tijden wordt de snelste machine gekozen.
-
-    Return:
-        Volgordes           : De volgorde van orders per machine
-        Tijden              : De eindtijd per machine
-        Tardiness           : De totale tardiness per machine
-        Total_tardiness     : De totale tardiness van alle orders
-        Penalty             : De totale penalty
-        Penalty_per_order   : De penalty per order
-        Tardiness_per_order : De tardiness per order
-        Machines_per_order  : De gekozen machine per order
-    '''
-
-    begintijden         = []
-    eindtijden          = []
-    aantal_machines     = len(di_machines)
-    tijden              = [0]* aantal_machines
-    tardiness           = [0]*aantal_machines
-    penalty_per_order   = []
-    tardiness_per_order = []
-    machines_per_order  = []
-    vorige_kleuren      = [None]*aantal_machines
-    volgordes           = [[] for _ in range(aantal_machines)]
-    total_tardiness     = 0
-    penalty             = 0
-
+    # Orders opzoeken via Order-nummer
+    orders = {}
     
-    for order in di_orders:
 
-        # Machine met laagste huidige tijd
+    for order in di_orders:
+        orders[order['Order']] = order
+
+    # Door de volledige ordervolgorde lopen
+    for order_nummer in volgorde:
+
+        order = orders[order_nummer]
+        kleur = order['Colour']
+
+        # Machine met de laagste huidige tijd zoeken
         laagste_tijd = min(tijden)
 
-
-        # Machines met de laagste huidige eindtijd, die we de order laten uitvoeren
         mogelijke_machines = []
 
-        for i in range(len(di_machines)):
-        
+        for i in range(aantal_machines):
             if tijden[i] == laagste_tijd:
                 mogelijke_machines.append(i)
 
@@ -139,80 +104,149 @@ def greedy_schedule(di_orders, di_machines, di_setups):
         for i in mogelijke_machines:
             if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
                 machine_index = i
-        machines_per_order.append(int(machine_index))
-        print(
-            "Order:", order['Order'],
-            "| Machine:", di_machines[machine_index]['Machine'],
-            "| Speed:", di_machines[machine_index]['Speed']
-        )
-        
 
-        # Order op gekozen machine plannen
-        tijden[machine_index], vorige_kleuren[machine_index], tard , penalty_order, begintijd, eindtijd = plan_order(
-            di_machines[machine_index],
-            order,
-            tijden[machine_index],
-            vorige_kleuren[machine_index],
-            di_setups
-        )
+        # Setup time bij een kleurverandering
+        if (vorige_kleuren[machine_index] is not None
+                and kleur != vorige_kleuren[machine_index]):
+            setup_gevonden = False
 
+            for setup in di_setups:
+                if (setup['From colour'] == vorige_kleuren[machine_index]
+                        and setup['To colour'] == kleur):
+
+                    tijden[machine_index] += setup['Setup time']
+                    setup_gevonden = True
+                    break
+
+            if not setup_gevonden:
+                raise ValueError(
+                    f"Geen setup gevonden van "
+                    f"{vorige_kleuren[machine_index]} naar {kleur}"
+                )
+
+        # Productietijd
+        productietijd = (order['Surface'] / di_machines[machine_index]['Speed'])
+        begintijd     = tijden[machine_index]
+
+        tijden[machine_index] += productietijd
+
+        # Eindtijd
+        eindtijd = tijden[machine_index]
+        machines_per_order.append(machine_index)
         begintijden.append(begintijd)
-        eindtijden.append(eindtijd) 
+        eindtijden.append(eindtijd)
 
-        # Resultaten opslaan
-        penalty  += penalty_order
-        total_tardiness += tard
+        # Tardiness
+        tardiness = max(0, eindtijd - order['Deadline'])
 
-        volgordes[machine_index].append(order['Order'])
-        tardiness[machine_index] += tard
+        # Penalty van deze specifieke order
+        penalty_order = tardiness * order['Penalty']
+
+        # Per order opslaan
+        tard_per_order.append(tardiness)
         penalty_per_order.append(penalty_order)
-        tardiness_per_order.append(tard)
 
-    return (volgordes, tijden, tardiness, total_tardiness, penalty, penalty_per_order, tardiness_per_order, machines_per_order, begintijden, eindtijden)
+        # Alles bij elkaar optellen
+        total_tardiness += tardiness
+        penalty += penalty_order
 
-(volgordes, 
- tijden, 
- tardiness, 
- total_tardiness, 
- penalty, 
- penalty_per_order, 
- tardiness_per_order, 
- machines_per_order, 
- begintijden, eindtijden) = greedy_schedule(di_orders, di_machines, di_setups)
+        # Kleur opslaan
+        vorige_kleuren[machine_index] = kleur
+
+    return total_tardiness, penalty, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_per_order
+
+# begin SA
 
 def swap(volgorde, i, j):
+
     nieuwe_volgorde = volgorde.copy()
-    nieuwe_volgorde[i], nieuwe_volgorde[j] = nieuwe_volgorde[j], nieuwe_volgorde[i]
+    nieuwe_volgorde[i], nieuwe_volgorde[j] = (nieuwe_volgorde[j], nieuwe_volgorde[i])
     return nieuwe_volgorde
+
 
 def random_swap(current):
 
-    nieuwe_volgorde = current.copy()
-
-    a = random.randint(0, len(nieuwe_volgorde) - 1)
-    b = random.randint(0, len(nieuwe_volgorde) - 1)
+    a = random.randint(0, len(current) - 1)
+    b = random.randint(0, len(current) - 1)
 
     while a == b:
-        b = random.randint(0, len(nieuwe_volgorde) - 1)
+        b = random.randint(0, len(current) - 1)
+    new_current = swap(current, a, b)
 
-    nieuwe_volgorde[a], nieuwe_volgorde[b] = (
-        nieuwe_volgorde[b],
-        nieuwe_volgorde[a]
+    return new_current
+
+
+
+def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
+    
+    current = df_orders['Order'].tolist()
+
+    random.shuffle(current)
+    current_tard, current_penalty, _,_, _, _, _ = calculate_tard_pen(current, di_orders, di_machines, di_setups)
+
+    best = current.copy()
+    best_tardiness = current_tard
+    best_penalty   = current_penalty
+
+    for i in range(t_max):
+
+        new_current = random_swap(current)
+        new_tard, new_penalty ,_,_,_ ,_ ,_   = calculate_tard_pen(new_current, di_orders, di_machines, di_setups)
+        verschil    = current_penalty-new_penalty
+        
+        kans = m.exp(verschil / temp)
+
+        if verschil > 0:
+            current              = new_current.copy()
+            current_penalty         = new_penalty
+        else:
+            getal = np.random.choice([0, 1], p=[1-kans, kans])
+
+            # Slechtere oplossing toch accepteren
+            if getal == 1:
+                current = new_current.copy()
+                current_penalty = new_penalty
+
+        # Is current de beste oplossing die we ooit hebben gezien?
+        if current_penalty < best_penalty:
+            best = current.copy()
+            best_penalty = current_penalty
+
+        # Temperatuur na 1000 iteraties verlagen
+        if (i + 1) % cooling_it == 0:
+            temp = temp * cooling_factor
+
+    # Tardiness van de beste gevonden volgorde opnieuw berekenen
+    best_tardiness, _, _, _, _, _, _ = calculate_tard_pen(best, di_orders, di_machines, di_setups)
+    return(best, best_penalty, best_tardiness)
+
+#PARAMETERS
+t_max = 10000
+cooling_factor =0.99
+cooling_it = 1000
+temp = 1000
+
+oefen, oefen_pen, oefen_tard = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
+
+def meta_improving_search(df_orders, iterations):
+
+    # Beginvolgorde als lijst met ordernummers
+    current = df_orders['Order'].tolist()
+
+    # SA gegevens
+    t_max = 10000
+    cooling_factor = 0.99
+    cooling_it = 1000
+    temp = 1000
+
+    # Eerst SA uitvoeren
+    beste_volgorde, best_penalty, best_tot_tard = SA(
+        df_orders,
+        t_max,
+        cooling_factor,
+        cooling_it,
+        temp
     )
-
-    return nieuwe_volgorde
-
-def improving_search(di_orders, iterations):
-
-    # Beginvolgorde
-    current = di_orders.copy()
-    beste_volgorde = current.copy()
-
-    # Eerste greedy uitvoeren
-    gegevens = greedy_schedule(current, di_machines, di_setups)
-
-    best_penalty = gegevens[4]
-    best_tot_tard = gegevens[3]
 
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
@@ -220,46 +254,29 @@ def improving_search(di_orders, iterations):
 
     for _ in range(iterations):
 
-        # Swap vanaf beste oplossing
+        # Swap uitvoeren op de beste gevonden volgorde
         current = random_swap(beste_volgorde)
 
-        # Planning opnieuw maken met greedy
-        gegevens = greedy_schedule(current, di_machines, di_setups)
+        # Planning van deze nieuwe volgorde berekenen
+        (current_tard, current_penalty, _, _, _, _, _) = calculate_tard_pen(current, di_orders, di_machines, di_setups)
 
-        current_penalty = gegevens[4]
-
-        # Penalty van ELKE geteste swap opslaan
+        # Penalty van deze swap bewaren
         penalty_per_iteratie.append(current_penalty)
 
-        # Alleen accepteren als deze beter is
+        # Alleen accepteren als de nieuwe volgorde beter is
         if current_penalty < best_penalty:
-
             best_penalty = current_penalty
-            best_tot_tard = gegevens[3]
+            best_tot_tard = current_tard
             beste_volgorde = current.copy()
 
-            order_lijst.append(
-                [order['Order'] for order in beste_volgorde]
-            )
+            order_lijst.append(beste_volgorde.copy())
 
-        # Beste penalty na iedere iteratie opslaan
+        # Beste penalty tot nu toe bewaren
         beste_penalty_per_iteratie.append(best_penalty)
 
-    return (
-        best_tot_tard,
-        best_penalty,
-        beste_volgorde,
-        penalty_per_iteratie,
-        beste_penalty_per_iteratie
-    )
+    return (best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie)
 
-(
-    best_tot_tard,
-    best_penalty,
-    beste_volgorde,
-    penalty_per_iteratie,
-    beste_penalty_per_iteratie
-) = improving_search(di_orders, 1000)
+(best_tardiness, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie) = meta_improving_search(df_orders, 1000)
 
 def plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie):
 
@@ -289,16 +306,13 @@ plot_penalty(
     beste_penalty_per_iteratie
 )
 
-def resultaten_naar_excel(
-    di_orders,
-    di_machines,
-    volgordes,
-    total_tardiness,
-    penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    bestandsnaam='Results.xlsx'
+tard, pen, machines_per_order, begintijden, eindtijden, tard_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
+
+print( f'De beste lijst is {beste_volgorde}, 'f'met een totale tardiness van {tard:.2f} 'f'en {pen:.2f} aan penalty')
+
+def resultaten_naar_excel_list(
+    di_orders, di_machines, volgordes, total_tardiness, penalty, tardiness_per_order, penalty_per_order, machines_per_order, begintijden, eindtijden,
+    bestandsnaam='Results_Metaheuristic_improved.xlsx'
 ):
     '''
     Zet de resultaten van de planning in een Excel-bestand.
@@ -309,20 +323,28 @@ def resultaten_naar_excel(
         3. Totale resultaten
     '''
 
-    #Volgorde per machine
+    # Volgorde per machine
     machine_nummers = []
     order_volgorde = []
 
-    for i in range(len(di_machines)):
-        machine_nummers.append(i + 1)
-        order_volgorde.append(' -> '.join(volgordes[i]))
+    for machine in range(len(di_machines)):
+
+        orders_machine = []
+
+        for i in range(len(di_orders)):
+
+            if machines_per_order[i] == machine:
+                orders_machine.append(di_orders[i]['Order'])
+
+        machine_nummers.append(di_machines[machine]['Machine'])
+        order_volgorde.append(' -> '.join(orders_machine))
 
     df_MachineOrder = pd.DataFrame({
         'Machine_number': machine_nummers,
         'Order machine': order_volgorde
     })
 
-    #Totale resultaten
+    # Totale resultaten
     df_totalen = pd.DataFrame({
         'Resultaat': [
             'Totale vertraging',
@@ -330,67 +352,70 @@ def resultaten_naar_excel(
         ],
         'Waarde': [
             round(total_tardiness, 4),
-            round(penalty,4)
+            round(penalty, 4)
         ]
     })
 
-    #Resultaten per order
+    # Resultaten per order
     orders_lijst = []
-    tardiness_lijst = []
-    penalty_tijd_lijst = []
-    tot_penalty_lijst = []
     machine_lijst = []
+    penalty_lijst = []
+    setup_lijst = []
+    start_lijst = []
+    process_lijst = []
+    end_lijst = []
+    deadline_lijst = []
+    tardiness_lijst = []
+    cost_lijst = []
+
+    orders_dict = {}
+
+    for order in di_orders:
+        orders_dict[order['Order']] = order
 
     for i in range(len(tardiness_per_order)):
 
-        orders_lijst.append(di_orders[i]['Order'])
-        tardiness_lijst.append(round(tardiness_per_order[i],2))
-        penalty_tijd_lijst.append(di_orders[i]['Penalty'])
-        tot_penalty_lijst.append(round(penalty_per_order[i],2))
-        machine_lijst.append(machines_per_order[i] + 1)
+        order_nummer = di_orders[i]['Order']
+        order = orders_dict[order_nummer]
+
+        start = begintijden[i]
+        end = eindtijden[i]
+
+        process = end - start
+
+        orders_lijst.append(order_nummer)
+        machine_lijst.append(di_machines[machines_per_order[i]]['Machine'])
+        penalty_lijst.append(order['Penalty'])
+        setup_lijst.append(0)  # voorlopig
+        start_lijst.append(round(start, 2))
+        process_lijst.append(round(process, 2))
+        end_lijst.append(round(end, 2))
+        deadline_lijst.append(order['Deadline'])
+        tardiness_lijst.append(round(tardiness_per_order[i], 2))
+        cost_lijst.append(round(penalty_per_order[i], 2))
 
     df_resultaten = pd.DataFrame({
         'Order': orders_lijst,
-        'tardiness': tardiness_lijst,
-        'Penalty': penalty_tijd_lijst,
-        'Tot_penalty': tot_penalty_lijst, #pen x tard
         'Machine': machine_lijst,
-        'begintijd': [round(tijd, 2) for tijd in begintijden],
-        'eindtijd': [round(tijd, 2) for tijd in eindtijden]
+        'Penalty': penalty_lijst,
+        'SeqNo': orders_lijst,
+        'Setup': setup_lijst,
+        'Start': start_lijst,
+        'Process': process_lijst,
+        'End': end_lijst,
+        'Deadline': deadline_lijst,
+        'Tardiness': tardiness_lijst,
+        'Cost': cost_lijst
     })
 
-
-    #Excel bestan maken
+    # Excel bestand maken
     with pd.ExcelWriter(bestandsnaam) as writer:
-        df_resultaten.to_excel(writer, sheet_name = 'Resultaten orders', index = False)  
-        df_MachineOrder.to_excel(writer, sheet_name = 'Volgorde machines', index = False)
-        df_totalen.to_excel(writer, sheet_name = 'Totale resulaten', index = False)
+        df_resultaten.to_excel(writer, sheet_name='Schedule', index=False)
+        df_MachineOrder.to_excel(writer, sheet_name='Volgorde machines', index=False)
+        df_totalen.to_excel(writer, sheet_name='Totale resulaten', index=False)
 
-resultaten_naar_excel(
-    di_orders,
-    di_machines,
-    volgordes,
-    total_tardiness,
-    penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    'Results_greedy.xlsx'
-)
 
-resultaten_naar_excel(
-    beste_volgorde,
-    di_machines,
-    volgordes,
-    best_tot_tard,
-    best_penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    'Results_greedy_improving.xlsx'
-)
-
-def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden):
+def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden):
     '''
     Maakt een Gantt-chart van de planning.
 
@@ -398,7 +423,7 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
     Elke balk stelt een order voor van begintijd tot eindtijd.
     '''
 
-    fig, ax = plt.subplots(figsize=(13, 7))
+    fig, ax = plt.subplots(figsize=(16, 7))
 
     kleur_dict = {
         'Red': 'red',
@@ -412,22 +437,25 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
         'White': 'white',
         'Grey': 'grey'
     }
+    orders = {} 
+    for order in di_orders: 
+        orders[order['Order']] = order
 
-    for i in range(len(di_orders)):
+    for i in range(len(volgorde)):
 
         machine = machines_per_order[i]
         begintijd = begintijden[i]
         eindtijd = eindtijden[i]
 
         duur = eindtijd - begintijd
-
-        kleur_order = di_orders[i]['Colour']
+        order = orders[volgorde[i]]
+        kleur_order = order['Colour']
 
         # Balk tekenen
         ax.barh(machine, duur, left=begintijd, height = 0.6,color = kleur_dict[kleur_order], edgecolor = 'black')
 
         # Ordernummer in de balk zetten
-        ax.text(begintijd + duur / 2, machine, str(di_orders[i]['Order']), ha='center', va='center', fontsize = 9)
+        ax.text(begintijd + duur / 2, machine, str(order['Order']), ha='center', va='center', fontsize = 9)
 
     # Machine-namen op de y-as
     ax.set_yticks(range(len(di_machines)))
@@ -443,4 +471,4 @@ def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtij
     plt.tight_layout()
     plt.show()
 
-gantt_chart(beste_volgorde, di_machines, machines_per_order, begintijden, eindtijden)
+gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden)
