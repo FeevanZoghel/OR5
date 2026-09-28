@@ -227,13 +227,7 @@ def meta_improving_search(df_orders, iterations):
     temp = 1000
 
     # Eerst SA uitvoeren
-    beste_volgorde, best_penalty, best_tot_tard = SA(
-        df_orders,
-        t_max,
-        cooling_factor,
-        cooling_it,
-        temp
-    )
+    beste_volgorde, best_penalty, best_tot_tard = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
@@ -366,7 +360,6 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
     df_resultaten = pd.DataFrame({
         'Order'     : orders_lijst,
         'Machine'   : machine_lijst,
-        'Penalty'   : penalty_lijst,
         'SeqNo'     : orders_lijst,
         'Setup'     : setup_lijst,
         'Start'     : start_lijst,
@@ -380,8 +373,8 @@ def resultaten_naar_excel_list(di_orders, di_machines, volgordes, total_tardines
     # Excel bestand maken
     with pd.ExcelWriter(bestandsnaam) as writer:
         df_resultaten.to_excel(writer, sheet_name='Schedule', index=False)
-        df_MachineOrder.to_excel(writer, sheet_name='Volgorde machines', index=False)
-        df_totalen.to_excel(writer, sheet_name='Totale resulaten', index=False)
+        df_MachineOrder.to_excel(writer, sheet_name='Schedule', index=False)
+        df_totalen.to_excel(writer, sheet_name='Schedule', index=False)
 
 
 def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, begintijden, eindtijden):
