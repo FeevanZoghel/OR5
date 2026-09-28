@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 
 random.seed(42)
 
-df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name = None)
+testbestand = 'Test01_HappyFlow.xlsx'
+
+df = pd.read_excel(f'Testen/{testbestand}', sheet_name=None)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
