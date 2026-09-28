@@ -288,31 +288,139 @@ def resultaten_naar_excel(
     tardiness_per_order,
     penalty_per_order,
     machines_per_order,
+    begintijden,
+    eindtijden,
     bestandsnaam='Results.xlsx'
 ):
     '''
     Zet de resultaten van de planning in een Excel-bestand.
 
-    Het Excel-bestand bevat drie tabbladen:
-        1. Resultaten orders
-        2. Volgorde machines
-        3. Totale resultaten
+    Het tabblad Schedule heeft de structuur die nodig is
+    voor de PaintShop Schedule Checker.
     '''
 
-    #Volgorde per machine
-    machine_nummers = []
-    order_volgorde = []
+    # Volgnummer per machine bijhouden
+    sequence_per_machine = [0] * len(di_machines)
 
-    for i in range(len(di_machines)):
-        machine_nummers.append(i + 1)
-        order_volgorde.append(' -> '.join(volgordes[i]))
+    # Vorige kleur per machine bijhouden
+    vorige_kleur = [None] * len(di_machines)
 
-    df_MachineOrder = pd.DataFrame({
-        'Machine_number': machine_nummers,
-        'Order machine': order_volgorde
+    # Lijsten voor Schedule
+    orders_lijst = []
+    machine_lijst = []
+    seqno_lijst = []
+    setup_lijst = []
+    start_lijst = []
+    process_lijst = []
+    end_lijst = []
+    deadline_lijst = []
+    tardiness_lijst = []
+    penalty_lijst = []
+    cost_lijst = []
+
+    for i in range(len(di_orders)):
+
+        order = di_orders[i]
+        machine_index = machines_per_order[i]
+
+        # -------------------------
+        # Order
+        # -------------------------
+        orders_lijst.append(order['Order'])
+
+        # -------------------------
+        # Machine
+        # -------------------------
+        machine_lijst.append(machine_index + 1)
+
+        # -------------------------
+        # Sequence number
+        # -------------------------
+        sequence_per_machine[machine_index] += 1
+        seqno_lijst.append(sequence_per_machine[machine_index])
+
+        # -------------------------
+        # Setup time
+        # -------------------------
+        setup_tijd = 0
+
+        if vorige_kleur[machine_index] is not None:
+
+            if vorige_kleur[machine_index] != order['Colour']:
+
+                for setup in di_setups:
+
+                    if (
+                        setup['From colour'] == vorige_kleur[machine_index]
+                        and setup['To colour'] == order['Colour']
+                    ):
+                        setup_tijd = setup['Setup time']
+                        break
+
+        setup_lijst.append(round(setup_tijd, 2))
+
+        vorige_kleur[machine_index] = order['Colour']
+
+        # -------------------------
+        # Start
+        # -------------------------
+        start_lijst.append(round(begintijden[i], 2))
+
+        # -------------------------
+        # Process time
+        # -------------------------
+        process_tijd = (
+            order['Surface']
+            / di_machines[machine_index]['Speed']
+        )
+
+        process_lijst.append(round(process_tijd, 2))
+
+        # -------------------------
+        # End
+        # -------------------------
+        end_lijst.append(round(eindtijden[i], 2))
+
+        # -------------------------
+        # Deadline
+        # -------------------------
+        deadline_lijst.append(order['Deadline'])
+
+        # -------------------------
+        # Tardiness
+        # -------------------------
+        tardiness_lijst.append(
+            round(tardiness_per_order[i], 2)
+        )
+
+        # -------------------------
+        # Penalty factor
+        # -------------------------
+        penalty_lijst.append(order['Penalty'])
+
+        # -------------------------
+        # Cost = tardiness * penalty
+        # -------------------------
+        cost_lijst.append(
+            round(penalty_per_order[i], 2)
+        )
+
+    # Schedule dataframe
+    df_schedule = pd.DataFrame({
+        'Order': orders_lijst,
+        'Machine': machine_lijst,
+        'SeqNo': seqno_lijst,
+        'Setup': setup_lijst,
+        'Start': start_lijst,
+        'Process': process_lijst,
+        'End': end_lijst,
+        'Deadline': deadline_lijst,
+        'Tardiness': tardiness_lijst,
+        'Penalty': penalty_lijst,
+        'Cost': cost_lijst
     })
 
-    #Totale resultaten
+    # Totale resultaten
     df_totalen = pd.DataFrame({
         'Resultaat': [
             'Totale vertraging',
@@ -320,41 +428,24 @@ def resultaten_naar_excel(
         ],
         'Waarde': [
             round(total_tardiness, 4),
-            round(penalty,4)
+            round(penalty, 4)
         ]
     })
 
-    #Resultaten per order
-    orders_lijst = []
-    tardiness_lijst = []
-    penalty_tijd_lijst = []
-    tot_penalty_lijst = []
-    machine_lijst = []
-
-    for i in range(len(tardiness_per_order)):
-
-        orders_lijst.append(di_orders[i]['Order'])
-        tardiness_lijst.append(round(tardiness_per_order[i],2))
-        penalty_tijd_lijst.append(di_orders[i]['Penalty'])
-        tot_penalty_lijst.append(round(penalty_per_order[i],2))
-        machine_lijst.append(machines_per_order[i] + 1)
-
-    df_resultaten = pd.DataFrame({
-        'Order': orders_lijst,
-        'tardiness': tardiness_lijst,
-        'Penalty': penalty_tijd_lijst,
-        'Tot_penalty': tot_penalty_lijst, #pen x tard
-        'Machine': machine_lijst,
-        'begintijd': [round(tijd, 2) for tijd in begintijden],
-        'eindtijd': [round(tijd, 2) for tijd in eindtijden]
-    })
-
-
-    #Excel bestan maken
+    # Excel maken
     with pd.ExcelWriter(bestandsnaam) as writer:
-        df_resultaten.to_excel(writer, sheet_name = 'Resultaten orders', index = False)  
-        df_MachineOrder.to_excel(writer, sheet_name = 'Volgorde machines', index = False)
-        df_totalen.to_excel(writer, sheet_name = 'Totale resulaten', index = False)
+
+        df_schedule.to_excel(
+            writer,
+            sheet_name='Schedule',
+            index=False
+        )
+
+        df_totalen.to_excel(
+            writer,
+            sheet_name='Totale resultaten',
+            index=False
+        )
 
 resultaten_naar_excel(
     di_orders,
@@ -365,20 +456,12 @@ resultaten_naar_excel(
     tardiness_per_order,
     penalty_per_order,
     machines_per_order,
+    begintijden,
+    eindtijden,
     'Results_greedy.xlsx'
 )
 
-resultaten_naar_excel(
-    beste_volgorde,
-    di_machines,
-    volgordes,
-    best_tot_tard,
-    best_penalty,
-    tardiness_per_order,
-    penalty_per_order,
-    machines_per_order,
-    'Results_greedy_improving.xlsx'
-)
+
 
 def gantt_chart(di_orders, di_machines, machines_per_order, begintijden, eindtijden):
     '''
