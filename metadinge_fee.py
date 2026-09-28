@@ -42,7 +42,7 @@ di_machines = di_machines_org.copy()
 di_setups = di_setups_org.copy()
 
 di_orders.sort(key=lambda job: job['Deadline'])
-di_machines.sort(key=lambda machine: machine['Speed'], reverse=True)
+
 
 
 def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
@@ -232,7 +232,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     return(best, best_penalty, best_tardiness)
 
 
-t_max = 1000000
+t_max = 10000
 cooling_factor =0.99
 cooling_it = 1000
 temp = 1000
