@@ -45,7 +45,8 @@ di_machines = di_machines_org.copy()
 di_setups = di_setups_org.copy()
 
 di_orders.sort(key=lambda job: job['Deadline'])
-di_machines.sort(key=lambda machine: machine['Speed'], reverse=True)
+
+
 
 def plan_order(machine, order, tijd, vorige_kleur, di_setups):
     '''
@@ -117,6 +118,7 @@ def greedy_schedule(di_orders, di_machines, di_setups):
     total_tardiness     = 0
     penalty             = 0
 
+    
     for order in di_orders:
 
         # Machine met laagste huidige tijd
@@ -138,6 +140,12 @@ def greedy_schedule(di_orders, di_machines, di_setups):
             if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
                 machine_index = i
         machines_per_order.append(int(machine_index))
+        print(
+            "Order:", order['Order'],
+            "| Machine:", di_machines[machine_index]['Machine'],
+            "| Speed:", di_machines[machine_index]['Speed']
+        )
+        
 
         # Order op gekozen machine plannen
         tijden[machine_index], vorige_kleuren[machine_index], tard , penalty_order, begintijd, eindtijd = plan_order(
