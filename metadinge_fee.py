@@ -225,7 +225,7 @@ def meta_improving_search(df_orders, iterations):
     current = df_orders['Order'].tolist()
 
     # SA gegevens
-    t_max = 1000
+    t_max = 10000
     cooling_factor = 0.99
     cooling_it = 1000
     temp = 1000
