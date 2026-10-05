@@ -41,7 +41,7 @@ di_machines = di_machines_org.copy()
 di_setups = di_setups_org.copy()
 
 di_orders.sort(key=lambda job: job['Deadline'])
-di_machines.sort(key=lambda machine: machine['Speed'], reverse=True)
+
 
 
 def greedy_schedule(di_orders, di_machines, di_setups):
