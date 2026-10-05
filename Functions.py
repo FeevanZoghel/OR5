@@ -32,7 +32,7 @@ def gantt_chart(di_orders, di_machines, machines_per_order, setup_per_order, beg
     fig, ax = plt.subplots(figsize=(16, 7))
 
     kleur_dict = {
-        'Red'   : 'red',
+        'Red'   : '#ff6464',
         'Blue'  : 'blue',
         'Green' : 'green',
         'Yellow': 'yellow',
@@ -44,8 +44,11 @@ def gantt_chart(di_orders, di_machines, machines_per_order, setup_per_order, beg
         'Grey'  : 'grey'
     }
 
-    for i in range(len(di_orders)):
+    # Zorgen dat labels maar één keer in de legenda komen
+    setup_label_gebruikt = False
+    tardiness_label_gebruikt = False
 
+    for i in range(len(di_orders)):
         machine = machines_per_order[i]
         begintijd = begintijden[i]
         eindtijd = eindtijden[i]
@@ -59,18 +62,29 @@ def gantt_chart(di_orders, di_machines, machines_per_order, setup_per_order, beg
 
         # Setup-tijd tekenen
         if setup_tijd > 0:
-            ax.barh(machine, setup_tijd, left=setup_start, height=0.6, color='lightgrey', edgecolor='black', hatch='//')
+            if setup_label_gebruikt == False:
+                ax.barh(machine, setup_tijd, left=setup_start, height=0.6, color='lightgrey', edgecolor='black', hatch='//', label='Setup tijd')
+                setup_label_gebruikt = True
+            else:
+                ax.barh(machine, setup_tijd, left=setup_start, height=0.6, color='lightgrey', edgecolor='black', hatch='//')
 
         # Rode rand als de order te laat is
         if tardiness_per_order[i] > 0:
-            edgecolor = "#FF8888"
+            edgecolor = '#f80000'
             linewidth = 2
+
+            if tardiness_label_gebruikt == False:
+                label = 'Te late order'
+                tardiness_label_gebruikt = True
+            else:
+                label = None
         else:
             edgecolor = 'black'
             linewidth = 1
+            label = None
 
         # Productietijd tekenen
-        ax.barh(machine, procestijd, left=begintijd, height=0.6, color=kleur_dict[kleur_order], edgecolor=edgecolor, linewidth=linewidth)
+        ax.barh(machine, procestijd, left=begintijd, height=0.6, color=kleur_dict[kleur_order], edgecolor=edgecolor, linewidth=linewidth, label=label)
 
         # Ordernummer in de balk zetten
         ax.text(begintijd + procestijd / 2, machine, str(di_orders[i]['Order']), ha='center', va='center', fontsize=9)
@@ -85,6 +99,9 @@ def gantt_chart(di_orders, di_machines, machines_per_order, setup_per_order, beg
     ax.set_xlabel('Tijd')
     ax.set_ylabel('Machine')
     ax.set_title('Gantt-chart Greedy planning')
+
+    # Legenda
+    ax.legend()
 
     # Totale resultaten rechtsboven
     ax.text(1, 1, f'Totale penalty: {penalty:.2f}\nTotale tardiness: {sum(tardiness_per_order):.2f}', transform=ax.transAxes, ha='right', va='bottom', fontsize=11)
@@ -173,7 +190,7 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, setup
     fig, ax = plt.subplots(figsize=(16, 7))
 
     kleur_dict = {
-        'Red'   : 'red',
+        'Red'   : '#fc564a',
         'Blue'  : 'blue',
         'Green' : 'green',
         'Yellow': 'yellow',
@@ -187,12 +204,14 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, setup
 
     # Orders opzoeken via ordernummer
     orders = {}
-
     for order in di_orders:
         orders[order['Order']] = order
 
-    for i in range(len(volgorde)):
+    # Zorgen dat labels maar één keer in de legenda komen
+    setup_label_gebruikt = False
+    tardiness_label_gebruikt = False
 
+    for i in range(len(volgorde)):
         machine = machines_per_order[i]
         begintijd = begintijden[i]
         eindtijd = eindtijden[i]
@@ -208,18 +227,29 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, setup
 
         # Setup-tijd tekenen
         if setup_tijd > 0:
-            ax.barh(machine, setup_tijd, left=setup_start, height=0.6, color='lightgrey', edgecolor='black', hatch='//')
+            if setup_label_gebruikt == False:
+                ax.barh(machine, setup_tijd, left=setup_start, height=0.6, color='lightgrey', edgecolor='black', hatch='//', label='Setup tijd')
+                setup_label_gebruikt = True
+            else:
+                ax.barh(machine, setup_tijd, left=setup_start, height=0.6, color='lightgrey', edgecolor='black', hatch='//')
 
         # Rode rand als de order te laat is
         if tardiness_per_order[i] > 0:
-            edgecolor = '#FF8888'
+            edgecolor = '#CA0000'
             linewidth = 2
+
+            if tardiness_label_gebruikt == False:
+                label = 'Te late order'
+                tardiness_label_gebruikt = True
+            else:
+                label = None
         else:
             edgecolor = 'black'
             linewidth = 1
+            label = None
 
         # Productietijd tekenen
-        ax.barh(machine, procestijd, left=begintijd, height=0.6, color=kleur_dict[kleur_order], edgecolor=edgecolor, linewidth=linewidth)
+        ax.barh(machine, procestijd, left=begintijd, height=0.6, color=kleur_dict[kleur_order], edgecolor=edgecolor, linewidth=linewidth, label=label)
 
         # Ordernummer in de balk zetten
         ax.text(begintijd + procestijd / 2, machine, str(order['Order']), ha='center', va='center', fontsize=9)
@@ -234,6 +264,9 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, setup
     ax.set_xlabel('Tijd')
     ax.set_ylabel('Machine')
     ax.set_title('Gantt-chart planning')
+
+    # Legenda
+    ax.legend()
 
     # Totale resultaten rechtsboven
     ax.text(1, 1, f'Totale penalty: {penalty:.2f}\nTotale tardiness: {sum(tardiness_per_order):.2f}', transform=ax.transAxes, ha='right', va='bottom', fontsize=11)
