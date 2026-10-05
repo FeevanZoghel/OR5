@@ -243,65 +243,63 @@ def calculate_results(volgordes, di_orders, di_machines, di_setups):
 
     return total_tardiness, penalty, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order
 
-def improving_search(di_orders, iterations):
+def improving_search(di_orders):
     # Beginvolgorde
     current = di_orders.copy()
     beste_volgorde = current.copy()
 
     # Eerste greedy planning
-    volgordes, _ = greedy_schedule(current.copy(), di_machines, di_setups)
-
-    gegevens = calculate_results(
-        volgordes,
-        current,
-        di_machines,
-        di_setups
-    )
-
+    volgordes, _ = greedy_schedule(beste_volgorde.copy(), di_machines, di_setups)
+    gegevens     = calculate_results(volgordes, beste_volgorde, di_machines, di_setups)
     best_tot_tard = gegevens[0]
     best_penalty = gegevens[1]
 
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
+    verbetering = True
 
-    for _ in range(iterations):
+    while verbetering:
+        verbetering = False
 
-        # Nieuwe ordervolgorde maken
-        new_current = random_swap(beste_volgorde)
+        # Beste resultaat van deze ronde
+        ronde_beste_volgorde = beste_volgorde.copy()
+        ronde_beste_penalty = best_penalty
+        ronde_beste_tard = best_tot_tard
 
-        # Greedy planning maken
-        volgordes, _ = greedy_schedule(
-            new_current.copy(),
-            di_machines,
-            di_setups
-        )
+        # Alle mogelijke swaps controleren
+        for i in range(len(beste_volgorde)):
+            for j in range(i + 1, len(beste_volgorde)):
+                # Nieuwe ordervolgorde maken
+                new_current = beste_volgorde.copy()
+                new_current[i], new_current[j] = new_current[j], new_current[i]
 
-        # Planning doorrekenen
-        gegevens = calculate_results(
-            volgordes,
-            new_current,
-            di_machines,
-            di_setups
-        )
+                # Greedy planning maken en doorrekenen
+                volgordes, _ = greedy_schedule(new_current.copy(), di_machines, di_setups)
+                gegevens = calculate_results(volgordes, new_current, di_machines, di_setups)
+                current_tard = gegevens[0]
+                current_penalty = gegevens[1]
 
-        current_tard = gegevens[0]
-        current_penalty = gegevens[1]
+                # Iedere geteste penalty opslaan
+                penalty_per_iteratie.append(current_penalty)
 
-        # Iedere geteste penalty opslaan
-        penalty_per_iteratie.append(current_penalty)
+                # Beste swap van deze ronde opslaan
+                if current_penalty < ronde_beste_penalty:
+                    ronde_beste_penalty = current_penalty
+                    ronde_beste_tard = current_tard
+                    ronde_beste_volgorde = new_current.copy()
+                    verbetering = True
 
-        # Alleen betere oplossing accepteren
-        if current_penalty < best_penalty:
-            best_penalty = current_penalty
-            best_tot_tard = current_tard
-            beste_volgorde = new_current.copy()
+        # Beste oplossing van deze ronde accepteren
+        if verbetering:
+            best_penalty = ronde_beste_penalty
+            best_tot_tard = ronde_beste_tard
+            beste_volgorde = ronde_beste_volgorde.copy()
 
-        # Beste penalty tot nu toe
         beste_penalty_per_iteratie.append(best_penalty)
 
     return best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
 
-(best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie) = improving_search(di_orders, 1000)
+(best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie) = improving_search(di_orders)
 
 # Beste planning opnieuw maken
 beste_volgordes, _ = greedy_schedule(beste_volgorde.copy(), di_machines, di_setups)
