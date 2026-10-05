@@ -6,8 +6,6 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
-random.seed(42)
-
 df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name = None)
 
 df_orders = df['Orders']
