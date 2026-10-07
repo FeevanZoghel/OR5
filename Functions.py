@@ -74,7 +74,7 @@ def gantt_chart(di_orders, di_machines, machines_per_order, setup_per_order, beg
             linewidth = 2
 
             if tardiness_label_gebruikt == False:
-                label = 'Te late order'
+                label = 'Order met penalty'
                 tardiness_label_gebruikt = True
             else:
                 label = None
@@ -239,7 +239,7 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, setup
             linewidth = 2
 
             if tardiness_label_gebruikt == False:
-                label = 'Te late order'
+                label = 'Order met penalty'
                 tardiness_label_gebruikt = True
             else:
                 label = None
