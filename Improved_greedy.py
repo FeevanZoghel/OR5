@@ -242,7 +242,7 @@ def calculate_results(volgordes, di_orders, di_machines, di_setups):
     return total_tardiness, penalty, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order
 
 def improving_search(di_orders):
-    # Beginvolgorde
+    # Beginvolgorde is gesorteerd vandaar dat het hetzelfde werkt als de greedy EDD rule
     current = di_orders.copy()
     beste_volgorde = current.copy()
 
