@@ -217,22 +217,24 @@ pen)
 # print("Best penalty SA:", oefen_pen)
 # print("Opnieuw berekende penalty:", opnieuw_berekende_penalty)
 
-# assert abs(oefen_pen - opnieuw_berekende_penalty) < 1e-9
-
-# print("Test 6: PASS")
-#---------------------------------------------------------------------------------------
+# if abs(oefen_pen - opnieuw_berekende_penalty) < 1e-9:
+#     print("Test 6: PASS")
+# else:
+#     print("Test 6: FAIL")
 
 #---------------------------------------------------------------------------------------
 # Test 7: geen setup bij dezelfde kleur
+
 # print("Setup-tijden:", setup_per_order)
 
-# assert all(setup == 0 for setup in setup_per_order)
-
-# print("Test 7: PASS")
-#---------------------------------------------------------------------------------------
+# if all(setup == 0 for setup in setup_per_order):
+#     print("Test 7: PASS")
+# else:
+#     print("Test 7: FAIL")
 
 #---------------------------------------------------------------------------------------
 # Test 12: order eindigt exact op deadline
+
 # test_volgorde = ['O3', 'O1', 'O2']
 
 # resultaten = calculate_tard_pen(
@@ -248,15 +250,17 @@ pen)
 # print("Tardiness O3:", tardiness)
 # print("Cost O3:", cost)
 
-# assert abs(eindtijd - 7.2) < 1e-9
-# assert tardiness == 0
-# assert cost == 0
+# if (abs(eindtijd - 7.2) < 1e-9
+#     and abs(tardiness) < 1e-9
+#     and abs(cost) < 1e-9):
 
-# print("Test 12: PASS")
-#---------------------------------------------------------------------------------------
+#     print("Test 12: PASS")
+# else:
+#     print("Test 12: FAIL")
 
 #---------------------------------------------------------------------------------------
 # Test 13: order eindigt 1 tijdseenheid na deadline
+
 # test_volgorde = ['O1', 'O2', 'O3']
 
 # resultaten = calculate_tard_pen(
@@ -272,15 +276,17 @@ pen)
 # print("Tardiness O3:", tardiness)
 # print("Cost O3:", cost)
 
-# assert abs(eindtijd - 16.2) < 1e-9
-# assert abs(tardiness - 1) < 1e-9
-# assert abs(cost - 8) < 1e-9
+# if (abs(eindtijd - 16.2) < 1e-9
+#     and abs(tardiness - 1) < 1e-9
+#     and abs(cost - 8) < 1e-9):
 
-# print("Test 13: PASS")
-#---------------------------------------------------------------------------------------
+#     print("Test 13: PASS")
+# else:
+#     print("Test 13: FAIL")
 
 #---------------------------------------------------------------------------------------
 # Test 2: snelste machine kiezen bij gelijke machinetijd
+
 # test_volgorde = ['O1', 'O2', 'O3']
 
 # resultaten = calculate_tard_pen(
@@ -292,13 +298,15 @@ pen)
 # print("Machines per order:", machines_per_order)
 # print("Machine voor O3:", di_machines[machines_per_order[2]]['Machine'])
 
-# assert machines_per_order == [1, 0, 1]
+# if machines_per_order == [1, 0, 1]:
+#     print("Test 2: PASS")
+# else:
+#     print("Test 2: FAIL")
 
-# print("Test 2: PASS")
 #---------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------
-# Test 4: penalty per order
+#Test 4: penalty per order
 # test_volgorde = ['O1', 'O2', 'O3']
 
 # resultaten = calculate_tard_pen(
@@ -313,9 +321,11 @@ pen)
 # print("Cost O3:", cost)
 # print("Totale penalty:", totale_penalty)
 
-# assert abs(tardiness - 5) < 1e-9
-# assert abs(cost - 50) < 1e-9
-# assert abs(totale_penalty - 50) < 1e-9
+# if (abs(tardiness - 5) < 1e-9
+#     and abs(cost - 50) < 1e-9
+#     and abs(totale_penalty - 50) < 1e-9):
 
-# print("Test 4: PASS")
+#     print("Test 4: PASS")
+# else:
+#     print("Test 4: FAIL")
 #---------------------------------------------------------------------------------------
