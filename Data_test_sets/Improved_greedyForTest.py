@@ -6,7 +6,7 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
-df = pd.read_excel('Test01_HappyFlow.xlsx', sheet_name = None)
+df = pd.read_excel('Data_test_sets/Test01_HappyFlow.xlsx', sheet_name = None)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
@@ -308,3 +308,23 @@ beste_volgordes, _ = greedy_schedule(beste_volgorde.copy(), di_machines, di_setu
 resultaten_naar_excel(beste_volgorde, di_machines, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order,'Results_greedy_improved.xlsx')
 
 gantt_chart(beste_volgorde,di_machines, machines_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty)
+
+#prints for Test01:
+for i, order in enumerate(beste_volgorde):
+    print(f"\nOrder: {order['Order']}")
+    print(f"Productietijd: {procestijden[i]}")
+    print(f"Eindtijd: {eindtijden[i]}")
+    print(f"Deadline: {order['Deadline']}")
+    print(f"Tardiness: {tardiness_per_order[i]}")
+    print(f"Penalty: {penalty_per_order[i]}")
+    print(f"Cost: {penalty_per_order[i]}")
+
+#Test05:
+volgorde = ['O1', 'O2', 'O3']
+
+nieuwe_volgorde = volgorde.copy()
+nieuwe_volgorde[0], nieuwe_volgorde[2] = nieuwe_volgorde[2], nieuwe_volgorde[0]
+
+print(nieuwe_volgorde)
+
+assert nieuwe_volgorde == ['O3', 'O2', 'O1']  #Correct!
