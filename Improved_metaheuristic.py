@@ -27,99 +27,99 @@ di_orders.sort(key=lambda job: job['Deadline'])
 
 
 def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
-    '''
-    Berekent de tardiness en penalty van een gegeven ordervolgorde.
-    Orders worden verdeeld over de machines op basis van de
-    laagste huidige machinetijd.
-    '''
+        '''
+        Berekent de tardiness en penalty van een gegeven ordervolgorde.
+        Orders worden verdeeld over de machines op basis van de
+        laagste huidige machinetijd.
+        '''
 
-    aantal_machines = len(di_machines)
+        aantal_machines = len(di_machines)
 
-    tijden = [0] * aantal_machines
-    vorige_kleuren = [None] * aantal_machines
-    sequence_numbers = [0] * aantal_machines
+        tijden = [0] * aantal_machines
+        vorige_kleuren = [None] * aantal_machines
+        sequence_numbers = [0] * aantal_machines
 
-    total_tardiness = 0
-    penalty = 0
+        total_tardiness = 0
+        penalty = 0
 
-    machines_per_order = []
-    seqno_per_order = []
-    setup_per_order = []
-    begintijden = []
-    procestijden = []
-    eindtijden = []
-    tardiness_per_order = []
-    penalty_per_order = []
+        machines_per_order = []
+        seqno_per_order = []
+        setup_per_order = []
+        begintijden = []
+        procestijden = []
+        eindtijden = []
+        tardiness_per_order = []
+        penalty_per_order = []
 
-    orders = {}
-    for order in di_orders:
-        orders[order['Order']] = order
+        orders = {}
+        for order in di_orders:
+            orders[order['Order']] = order
 
-    for order_nummer in volgorde:
-        order = orders[order_nummer]
-        kleur = order['Colour']
+        for order_nummer in volgorde:
+            order = orders[order_nummer]
+            kleur = order['Colour']
 
-        # Machine met de laagste huidige tijd zoeken
-        laagste_tijd = min(tijden)
-        mogelijke_machines = []
+            # Machine met de laagste huidige tijd zoeken
+            laagste_tijd = min(tijden)
+            mogelijke_machines = []
 
-        for i in range(aantal_machines):
-            if tijden[i] == laagste_tijd:
-                mogelijke_machines.append(i)
+            for i in range(aantal_machines):
+                if tijden[i] == laagste_tijd:
+                    mogelijke_machines.append(i)
 
-        # Bij gelijke tijd: snelste machine
-        machine_index = mogelijke_machines[0]
-        for i in mogelijke_machines:
-            if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
-                machine_index = i
+            # Bij gelijke tijd: snelste machine
+            machine_index = mogelijke_machines[0]
+            for i in mogelijke_machines:
+                if di_machines[i]['Speed'] > di_machines[machine_index]['Speed']:
+                    machine_index = i
 
-        # Setup time bij een kleurverandering
-        setup_tijd = 0
+            # Setup time bij een kleurverandering
+            setup_tijd = 0
 
-        if vorige_kleuren[machine_index] is not None and kleur != vorige_kleuren[machine_index]:
-            setup_gevonden = False
+            if vorige_kleuren[machine_index] is not None and kleur != vorige_kleuren[machine_index]:
+                setup_gevonden = False
 
-            for setup in di_setups:
-                if setup['From colour'] == vorige_kleuren[machine_index] and setup['To colour'] == kleur:
-                    setup_tijd = setup['Setup time']
-                    tijden[machine_index] += setup['Setup time']
-                    setup_gevonden = True
-                    break
+                for setup in di_setups:
+                    if setup['From colour'] == vorige_kleuren[machine_index] and setup['To colour'] == kleur:
+                        setup_tijd = setup['Setup time']
+                        tijden[machine_index] += setup['Setup time']
+                        setup_gevonden = True
+                        break
 
-            if not setup_gevonden:
-                raise ValueError(f'Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}')
+                if not setup_gevonden:
+                    raise ValueError(f'Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}')
 
-        # Productietijd
-        productietijd = order['Surface'] / di_machines[machine_index]['Speed']
-        begintijd = tijden[machine_index]
-        tijden[machine_index] += productietijd
-        eindtijd = tijden[machine_index]
+            # Productietijd
+            productietijd = order['Surface'] / di_machines[machine_index]['Speed']
+            begintijd = tijden[machine_index]
+            tijden[machine_index] += productietijd
+            eindtijd = tijden[machine_index]
 
-        # Sequence number
-        sequence_numbers[machine_index] += 1
-        seqno = sequence_numbers[machine_index]
+            # Sequence number
+            sequence_numbers[machine_index] += 1
+            seqno = sequence_numbers[machine_index]
 
-        machines_per_order.append(machine_index)
-        seqno_per_order.append(seqno)
-        setup_per_order.append(setup_tijd)
-        begintijden.append(begintijd)
-        procestijden.append(productietijd)
-        eindtijden.append(eindtijd)
+            machines_per_order.append(machine_index)
+            seqno_per_order.append(seqno)
+            setup_per_order.append(setup_tijd)
+            begintijden.append(begintijd)
+            procestijden.append(productietijd)
+            eindtijden.append(eindtijd)
 
-        # Tardiness en penalty
-        tardiness = max(0, eindtijd - order['Deadline'])
-        penalty_order = tardiness * order['Penalty']
+            # Tardiness en penalty
+            tardiness = max(0, eindtijd - order['Deadline'])
+            penalty_order = tardiness * order['Penalty']
 
-        tardiness_per_order.append(tardiness)
-        penalty_per_order.append(penalty_order)
+            tardiness_per_order.append(tardiness)
+            penalty_per_order.append(penalty_order)
 
-        total_tardiness += tardiness
-        penalty += penalty_order
+            total_tardiness += tardiness
+            penalty += penalty_order
 
-        # Kleur opslaan
-        vorige_kleuren[machine_index] = kleur
+            # Kleur opslaan
+            vorige_kleuren[machine_index] = kleur
 
-    return (total_tardiness, penalty, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order)
+        return (total_tardiness, penalty, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order)
 
 # Begin Improving Search
 
@@ -160,34 +160,61 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
 
 
 t_max = 1000
-cooling_factor = 0.99
+cooling_factor = 0.2
 cooling_it = 1000
 temp = 1000
 
+sa_volgorde, sa_penalty = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 
-def meta_improving_search(df_orders, iterations):
-    beste_volgorde, best_penalty = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
+def meta_improving_search(df_orders, sa_volgorde):
+    # Begin met de beste oplossing uit SA
+    beste_volgorde = sa_volgorde.copy()
+
+    gegevens = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
+    best_tot_tard = gegevens[0]
+    best_penalty = gegevens[1]
 
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
+    verbetering = True
 
-    for _ in range(iterations):
-        current = random_swap(beste_volgorde)
+    while verbetering:
+        verbetering = False
 
-        _, current_penalty, _, _, _, _, _, _, _, _ = calculate_tard_pen(current, di_orders, di_machines, di_setups)
+        ronde_beste_volgorde = beste_volgorde.copy()
+        ronde_beste_penalty = best_penalty
+        ronde_beste_tard = best_tot_tard
 
-        penalty_per_iteratie.append(current_penalty)
+        # Alle mogelijke swaps onderzoeken
+        for i in range(len(beste_volgorde)):
+            for j in range(i + 1, len(beste_volgorde)):
+                new_current = beste_volgorde.copy()
+                new_current[i], new_current[j] = new_current[j], new_current[i]
 
-        if current_penalty < best_penalty:
-            best_penalty = current_penalty
-            beste_volgorde = current.copy()
+                gegevens = calculate_tard_pen(new_current, di_orders, di_machines, di_setups)
+                current_tard = gegevens[0]
+                current_penalty = gegevens[1]
 
-        beste_penalty_per_iteratie.append(best_penalty)
+                penalty_per_iteratie.append(current_penalty)
 
-    return best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
+                if current_penalty < ronde_beste_penalty:
+                    ronde_beste_penalty = current_penalty
+                    ronde_beste_tard = current_tard
+                    ronde_beste_volgorde = new_current.copy()
+                    verbetering = True
+                beste_penalty_per_iteratie.append(best_penalty)
+
+        if verbetering:
+            best_penalty = ronde_beste_penalty
+            best_tot_tard = ronde_beste_tard
+            beste_volgorde = ronde_beste_volgorde.copy()
+
+        
+
+    return best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
 
 
-best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie = meta_improving_search(df_orders, 1000)
+best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie = meta_improving_search(df_orders, sa_volgorde)
 
 plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie)
 
