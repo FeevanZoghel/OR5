@@ -1,11 +1,12 @@
-
 from Functions import dictionary, random_swap, gantt_chart_list, resultaten_naar_excel_list
 import pandas as pd
 import random
 import math as m
 import matplotlib.pyplot as plt
+import time
 
-t_max = 500000
+# Instellingen
+t_max_values = [100, 500, 1000, 5000, 10000,50000, 1000000]
 cooling_factor = 0.99
 cooling_it = 1000
 temp = 1000
@@ -155,25 +156,24 @@ def meta_improving_search(sa_volgorde):
 
     return best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
 
-
 def plot_sa_progress(current_history, best_history, temperature_history):
     iterations = range(1, len(current_history) + 1)
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    # Penalty op de linker y-as
+    # Penalty op linker y-as
     ax1.plot(iterations, current_history, label='Current solution', color='tab:blue', linewidth=0.8, alpha=0.7)
     ax1.plot(iterations, best_history, label='Best solution', color='tab:orange', linewidth=1.8)
     ax1.set_xlabel('Iteration')
     ax1.set_ylabel('Total penalty')
     ax1.grid(alpha=0.3)
 
-    # Temperatuur op de rechter y-as
+    # Temperatuur op rechter y-as
     ax2 = ax1.twinx()
     ax2.plot(iterations, temperature_history, label='Temperature', color='tab:red', linewidth=1.5)
     ax2.set_ylabel('Temperature', color='tab:red')
     ax2.tick_params(axis='y', labelcolor='tab:red')
 
-    # Legenda's combineren
+    # Legenda combineren
     lijnen1, labels1 = ax1.get_legend_handles_labels()
     lijnen2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lijnen1 + lijnen2, labels1 + labels2, loc='upper right')
@@ -182,20 +182,52 @@ def plot_sa_progress(current_history, best_history, temperature_history):
     plt.tight_layout()
     plt.show()
 
-# Simulated Annealing uitvoeren
-sa_volgorde, sa_penalty, current_history, best_history, temperature_history = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
+# Experimenten uitvoeren
+resultaten = []
 
-# Improving Search uitvoeren, maar niet in de grafieken tonen
-best_tot_tard, best_penalty, beste_volgorde, dis_penalties, dis_beste_penalties = meta_improving_search(sa_volgorde)
+for t_max in t_max_values:
+    random.seed(5)
+    print(f'\nExperiment met t_max = {t_max}')
 
-# Alleen het verloop van Simulated Annealing plotten
+    # Simulated Annealing
+    start_sa = time.perf_counter()
+    sa_volgorde, sa_penalty, current_history, best_history, temperature_history = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
+    rekentijd_sa = time.perf_counter() - start_sa
+
+    # Improving Search
+    start_improving = time.perf_counter()
+    best_tot_tard, best_penalty, beste_volgorde, dis_penalties, dis_beste_penalties = meta_improving_search(sa_volgorde)
+    rekentijd_improving = time.perf_counter() - start_improving
+
+    # Resultaten verzamelen
+    resultaten.append({
+        't_max': t_max,
+        'cooling_factor': cooling_factor,
+        'cooling_it': cooling_it,
+        'temp': temp,
+        'Penalty SA': sa_penalty,
+        'Total penalty': best_penalty,
+        'Total tardiness': best_tot_tard,
+        'Rekentijd SA (s)': rekentijd_sa,
+        'Rekentijd Improving Search (s)': rekentijd_improving,
+        'Totale rekentijd (s)': rekentijd_sa + rekentijd_improving
+    })
+
+    print(f'Penalty na Simulated Annealing: {sa_penalty:.2f}')
+    print(f'Penalty na Improving Search: {best_penalty:.2f}')
+    print(f'Totale rekentijd: {rekentijd_sa + rekentijd_improving:.2f} seconden')
+
+# Alle resultaten opslaan in Excel
+pd.DataFrame(resultaten).to_excel('Experimenten.xlsx', index=False)
+print('\nAlle experimenten zijn opgeslagen in Experimenten.xlsx')
+
+# Grafiek van het laatste experiment
 plot_sa_progress(current_history, best_history, temperature_history)
 
-# Resultaten
+# Eindresultaat van het laatste experiment
 tard, pen, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
-print(f'Penalty na Simulated Annealing: {sa_penalty:.2f}')
-print(f'Penalty na Improving Search: {best_penalty:.2f}')
-print(f'De beste lijst is {beste_volgorde}, met een totale tardiness van {tard:.2f} en {pen:.2f} aan penalty')
+
+print(f'De beste lijst van het laatste experiment is {beste_volgorde}, met een totale tardiness van {tard:.2f} en {pen:.2f} aan penalty')
 
 resultaten_naar_excel_list(beste_volgorde, di_orders, di_machines, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order, 'Results_SA_improved.xlsx')
 gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, pen)
