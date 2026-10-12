@@ -15,7 +15,7 @@ import streamlit as st
 
 from Functions import dictionary, random_swap, swap
 
-
+    
 # ============================================================
 # PAGINA EN DONKER THEMA
 # ============================================================
