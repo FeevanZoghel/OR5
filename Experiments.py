@@ -1009,18 +1009,21 @@ if solve:
                 )
 
             else:
-
+                sa_volgorde, _ = namespace["SA"](
+                    sheets["Orders"],
+                    int(t_max),
+                    float(cooling_factor),
+                    int(cooling_it),
+                    float(temp)
+                )
                 (
+                    _,
                     _,
                     sequence,
                     history_tested,
                     history_best
-                ) = namespace[
-                    "meta_improving_search"
-                ](
-                    sheets["Orders"],
-                    int(improve_iterations)
-                )
+                ) = namespace["meta_improving_search"](sa_volgorde)
+                
 
             result = namespace[
                 "calculate_tard_pen"
