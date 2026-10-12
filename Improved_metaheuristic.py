@@ -6,6 +6,11 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
+t_max = 1000
+cooling_factor = 0.99
+cooling_it = 1000
+temp = 1000
+
 # Data inladen
 df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
 
@@ -157,13 +162,6 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
             temp = temp * cooling_factor
 
     return best, best_penalty
-
-
-t_max = 1000
-cooling_factor = 0.99
-cooling_it = 1000
-temp = 1000
-
 
 def meta_improving_search(df_orders, iterations):
     beste_volgorde, best_penalty = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
