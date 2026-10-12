@@ -14,8 +14,38 @@ import streamlit as st
 from Functions import dictionary, random_swap, swap
 
 st.set_page_config(page_title='PaintShop Experiments', page_icon='🎨', layout='wide')
-st.title('🎨 PaintShop | Experiments')
-st.caption('Experimenteer met jullie oorspronkelijke Greedy- en Simulated Annealing-functies.')
+st.markdown("""
+<style>
+.stApp {background: #f8faff; color: #142044;}
+[data-testid="stSidebar"] {background: linear-gradient(180deg,#eef2ff 0%,#e5eafe 100%);}
+[data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {color:#16204b;}
+.block-container {max-width: 1600px; padding-top: 1.7rem; padding-bottom: 2rem;}
+.hero {background: linear-gradient(115deg,#fff 50%,#fbe6f4 74%,#dff5ff 100%);
+       border:1px solid #e8e9f8;border-radius:20px;padding:24px 28px;margin-bottom:18px;}
+.hero h1 {color:#101a47; font-size:2.45rem; margin:0 0 4px 0;}
+.hero p {color:#576582; margin:0; font-size:1rem;}
+.metric-card {min-height:114px;border:1px solid #e3e9f5;border-radius:15px;
+              padding:17px 15px; box-shadow:0 2px 8px rgba(33,50,110,.025);}
+.metric-card .name {font-size:.84rem;font-weight:650;color:#344165;}
+.metric-card .value {font-size:1.85rem;font-weight:800;color:#101a47;margin-top:8px;}
+.metric-card .emoji {font-size:1.3rem;margin-bottom:4px;}
+.metric-blue {background:#eaf2ff;} .metric-green {background:#e9faef;}
+.metric-yellow {background:#fff6df;} .metric-pink {background:#ffebf0;}
+.metric-purple {background:#f0eaff;} .metric-cyan {background:#e6f9fa;}
+.section-title {font-size:1.2rem;font-weight:750;color:#14204b;margin:10px 0 12px;}
+[data-testid="stVerticalBlockBorderWrapper"] {border-color:#e5eaf6!important;border-radius:16px!important;}
+div.stButton > button[kind="primary"] {background:linear-gradient(100deg,#7350ff,#6936f2);border:0;
+       color:white;border-radius:11px;font-weight:700;min-height:49px;}
+div.stButton > button[kind="primary"]:hover {background:#5c2cdb;color:white;}
+[data-testid="stTabs"] button[aria-selected="true"] {color:#6d40ef!important;}
+[data-testid="stTabs"] [data-baseweb="tab-highlight"] {background:#6d40ef!important;}
+[data-testid="stFileUploader"] {border-radius:13px;}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""<div class="hero"><h1>🎨 PaintShop | Experiments</h1>
+<p>Experimenteer met jullie oorspronkelijke Greedy- en Simulated Annealing-functies.</p>
+</div>""", unsafe_allow_html=True)
 
 FILES = {
     'Greedy': 'Greedy.py',
@@ -123,12 +153,15 @@ def excel_file(schedule, settings, penalty, tardiness, duration):
 
 
 with st.sidebar:
-    st.header('Instellingen')
-    upload = st.file_uploader('Excelbestand', type='xlsx')
-    method = st.selectbox('Methode', list(FILES))
+    st.markdown('### 🎨 PaintShop Experiments')
+    st.markdown('#### 1. Excelbestand uploaden')
+    upload = st.file_uploader('Excelbestand', type='xlsx', label_visibility='collapsed')
+    st.markdown('#### 2. Kies methode')
+    method = st.radio('Optimalisatiemethode', list(FILES), index=3, label_visibility='collapsed')
     uses_sa = method in ('Simulated Annealing', 'Improved Simulated Annealing')
     if uses_sa:
-        st.subheader('Simulated Annealing')
+        st.markdown('#### 3. Parameters')
+        st.markdown('**Simulated Annealing**')
         t_max = st.number_input('t_max', min_value=1, value=1000, step=100)
         cooling_factor = st.number_input('cooling_factor', min_value=0.0001,
                                          max_value=1.0, value=0.99, format='%.4f')
@@ -136,9 +169,12 @@ with st.sidebar:
         temp = st.number_input('temp', min_value=0.0001, value=1000.0, step=100.0)
         seed = st.number_input('Random seed', min_value=0, value=42, step=1)
     if method == 'Improved Simulated Annealing':
-        improve_iterations = st.number_input('Improving search iteraties',
+        st.markdown('**Improving Search**')
+        improve_iterations = st.number_input('Aantal verbeteriteraties',
                                              min_value=0, value=1000, step=100)
-    solve = st.button('▶ Solve', type='primary', use_container_width=True,
+    with st.expander('⚙️ Geavanceerd'):
+        st.caption('Gebruik dezelfde random seed om experimenten reproduceerbaar te vergelijken.')
+    solve = st.button('🚀 Solve  ▶', type='primary', use_container_width=True,
                       disabled=upload is None)
 
 if upload is None:
@@ -155,11 +191,13 @@ except Exception as exc:
     st.error(f'Invoerfout: {exc}')
     st.stop()
 
-c1, c2, c3 = st.columns(3)
-c1.metric('Orders', len(orders))
-c2.metric('Machines', len(machines))
-c3.metric('Setup-overgangen', len(setups))
-with st.expander('Ingevoerde gegevens'):
+def metric_card(name, value, emoji, style):
+    st.markdown(f'<div class="metric-card metric-{style}">'
+                f'<div class="emoji">{emoji}</div><div class="name">{name}</div>'
+                f'<div class="value">{value}</div></div>', unsafe_allow_html=True)
+
+
+with st.expander('📁 Ingevoerde gegevens'):
     for sheet in REQUIRED:
         st.markdown(f'**{sheet}**')
         st.dataframe(sheets[sheet], hide_index=True, use_container_width=True)
@@ -218,33 +256,80 @@ if solve:
         st.stop()
 
 result = st.session_state.get('paintshop_result')
+
+st.markdown('<div class="section-title">📊 Experimentoverzicht</div>', unsafe_allow_html=True)
+metrics = st.columns(6, gap='small')
+values = [
+    ('Orders', str(len(orders)), '📄', 'blue'),
+    ('Machines', str(len(machines)), '⚙️', 'green'),
+    ('Setup-overgangen', str(len(setups)), '🔁', 'yellow'),
+    ('Totale penalty', f"{result['penalty']:,.2f}" if result else '—', '🎯', 'pink'),
+    ('Totale tardiness', f"{result['tardiness']:,.2f}" if result else '—', '🕒', 'purple'),
+    ('Rekentijd', f"{result['duration']:.3f} s" if result else '—', '⏱️', 'cyan'),
+]
+for column, (name, value, emoji, style) in zip(metrics, values):
+    with column:
+        metric_card(name, value, emoji, style)
+
 if result is None:
-    st.info('Kies een methode en klik op Solve.')
+    st.info('Stel links de parameters in en klik op 🚀 Solve om de planning te berekenen.')
 else:
     if result['key'] != run_key:
-        st.warning('De instellingen zijn gewijzigd. Klik opnieuw op Solve.')
-    st.divider()
-    st.subheader('Resultaten')
-    a, b, c = st.columns(3)
-    a.metric('Totale penalty', f"{result['penalty']:.2f}")
-    b.metric('Totale tardiness', f"{result['tardiness']:.2f}")
-    c.metric('Rekentijd', f"{result['duration']:.3f} s")
-    st.caption('Ordervolgorde: ' + ' → '.join(map(str, result['sequence'])))
-    tab_gantt, tab_schedule, tab_history = st.tabs(['Gantt-chart', 'Schedule', 'Optimalisatieverloop'])
-    with tab_gantt:
-        fig = gantt(result['schedule'], result['machines'])
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
-    with tab_schedule:
-        st.dataframe(result['schedule'][COLUMNS], hide_index=True, use_container_width=True)
+        st.warning('De instellingen zijn gewijzigd. Klik opnieuw op Solve om nieuwe resultaten te berekenen.')
+    st.write('')
+    tab_plan, tab_table, tab_history, tab_orders = st.tabs([
+        '📊 Planning (Gantt-chart)', '📋 Schedule (tabel)',
+        '📈 Optimalisatieverloop', '☷ Ordervolgorde'
+    ])
+    with tab_plan:
+        left, right = st.columns([1.65, 1], gap='medium')
+        with left:
+            with st.container(border=True):
+                st.markdown('#### 📊 Gantt-chart planning')
+                fig = gantt(result['schedule'], result['machines'])
+                st.pyplot(fig, use_container_width=True)
+                plt.close(fig)
+        with right:
+            with st.container(border=True):
+                st.markdown('#### 📈 Optimalisatieverloop')
+                if result['tested'] or result['best']:
+                    data = {}
+                    if result['tested']:
+                        data['Geteste penalty'] = pd.Series(result['tested'], dtype=float)
+                    if result['best']:
+                        data['Beste penalty'] = pd.Series(result['best'], dtype=float)
+                    st.line_chart(pd.DataFrame(data), height=370,
+                                  x_label='Iteratie', y_label='Penalty')
+                    st.caption('Bij Improved Greedy wordt de beste penalty per ronde opgeslagen; '
+                               'bij Improved SA komt de historie uit de improving search.')
+                else:
+                    st.info('Deze methode registreert geen optimalisatiegeschiedenis.')
+        st.markdown('#### 📋 Schedule')
+        st.dataframe(result['schedule'][COLUMNS], hide_index=True,
+                     use_container_width=True, height=300)
+    with tab_table:
+        st.markdown('#### Volledige planning')
+        search = st.text_input('🔎 Zoek order', placeholder='Bijvoorbeeld ORD13')
+        table = result['schedule'][COLUMNS]
+        if search:
+            table = table[table['Order'].astype(str).str.contains(search, case=False, regex=False)]
+        st.dataframe(table, hide_index=True, use_container_width=True, height=490)
     with tab_history:
-        if result['tested']:
-            st.line_chart(pd.DataFrame({'Geteste penalty': result['tested']}))
-        if result['best']:
-            st.line_chart(pd.DataFrame({'Beste penalty': result['best']}))
-        if not result['tested'] and not result['best']:
-            st.info('Dit oorspronkelijke algoritme registreert geen iteratiegeschiedenis.')
-    st.download_button('⬇ Download Excel', data=excel_file(
+        st.markdown('#### Optimalisatieverloop')
+        if result['tested'] or result['best']:
+            data = {}
+            if result['tested']:
+                data['Geteste penalty'] = pd.Series(result['tested'], dtype=float)
+            if result['best']:
+                data['Beste penalty'] = pd.Series(result['best'], dtype=float)
+            st.line_chart(pd.DataFrame(data), x_label='Iteratie', y_label='Penalty')
+        else:
+            st.info('De oorspronkelijke methode slaat geen penaltygeschiedenis per iteratie op.')
+    with tab_orders:
+        st.markdown('#### Ordervolgorde')
+        st.write(' → '.join(map(str, result['sequence'])))
+        st.caption('De volgorde is overgenomen uit het resultaat van jullie oorspronkelijke algoritme.')
+    st.download_button('⬇️ Download Excel', data=excel_file(
         result['schedule'], result['settings'], result['penalty'],
         result['tardiness'], result['duration']),
         file_name='PaintShop_Experiment_Results.xlsx',
