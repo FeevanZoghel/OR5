@@ -999,30 +999,26 @@ if solve:
             np.random.seed(int(seed))
 
             if method == "Simulated Annealing":
-
-                sequence, _ = namespace["SA"](
+                sequence, _, history_tested, history_best = namespace["SA"](
                     sheets["Orders"],
                     int(t_max),
                     float(cooling_factor),
                     int(cooling_it),
                     float(temp)
-                )
+                )(temp)
+                
 
             else:
-                sa_volgorde, _ = namespace["SA"](
+                sa_volgorde, _, sa_penalties, sa_beste_penalties = namespace["SA"](
                     sheets["Orders"],
                     int(t_max),
                     float(cooling_factor),
                     int(cooling_it),
                     float(temp)
                 )
-                (
-                    _,
-                    _,
-                    sequence,
-                    history_tested,
-                    history_best
-                ) = namespace["meta_improving_search"](sa_volgorde)
+                _, _, sequence, dis_penalties, dis_beste_penalties = namespace["meta_improving_search"](sa_volgorde)
+                history_tested = sa_penalties + dis_penalties
+                history_best = sa_beste_penalties + dis_beste_penalties
                 
 
             result = namespace[
