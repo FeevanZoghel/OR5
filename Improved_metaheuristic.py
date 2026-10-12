@@ -6,8 +6,8 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
-t_max = 10000
-cooling_factor = 0.99
+t_max = 50000
+cooling_factor = 0.95
 cooling_it = 100
 temp = 1000
 
