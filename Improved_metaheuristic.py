@@ -155,11 +155,12 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
                 current = new_current.copy()
                 current_penalty = new_penalty
 
+        penalty_per_iteratie.append(current_penalty)
+
         if current_penalty < best_penalty:
             best = current.copy()
             best_penalty = current_penalty
 
-        beste_penalty_per_iteratie.append(best_penalty)
 
         if (i + 1) % cooling_it == 0:
             temp *= cooling_factor
