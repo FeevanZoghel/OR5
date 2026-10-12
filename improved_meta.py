@@ -112,29 +112,27 @@ def meta_improving_search(sa_volgorde):
 
     while verbetering:
         verbetering = False
-        ronde_beste_volgorde = beste_volgorde.copy()
-        ronde_beste_penalty = best_penalty
-        ronde_beste_tard = best_tot_tard
 
         for i in range(len(beste_volgorde)):
             for j in range(i + 1, len(beste_volgorde)):
                 new_current = beste_volgorde.copy()
                 new_current[i], new_current[j] = new_current[j], new_current[i]
                 current_tard, current_penalty = calculate_tard_pen(new_current, di_orders, di_machines, di_setups)[:2]
+
                 penalty_per_iteratie.append(current_penalty)
 
-                if current_penalty < ronde_beste_penalty:
-                    ronde_beste_penalty = current_penalty
-                    ronde_beste_tard = current_tard
-                    ronde_beste_volgorde = new_current.copy()
+                if current_penalty < best_penalty:
+                    best_penalty = current_penalty
+                    best_tot_tard = current_tard
+                    beste_volgorde = new_current.copy()
                     verbetering = True
 
-                beste_penalty_per_iteratie.append(ronde_beste_penalty)
+                beste_penalty_per_iteratie.append(best_penalty)
 
-        if verbetering:
-            best_penalty = ronde_beste_penalty
-            best_tot_tard = ronde_beste_tard
-            beste_volgorde = ronde_beste_volgorde.copy()
+                if verbetering:
+                    break
+            if verbetering:
+                break
 
     return best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
 
