@@ -6,9 +6,9 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
-t_max = 1000
+t_max = 10000
 cooling_factor = 0.99
-cooling_it = 1000
+cooling_it = 100
 temp = 1000
 
 # Data inladen
@@ -137,9 +137,14 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     best = current.copy()
     best_penalty = current_penalty
 
+    penalty_per_iteratie = []
+    beste_penalty_per_iteratie = []
+
     for i in range(t_max):
         new_current = random_swap(current)
         _, new_penalty, _, _, _, _, _, _, _, _ = calculate_tard_pen(new_current, di_orders, di_machines, di_setups)
+
+        penalty_per_iteratie.append(new_penalty)
 
         verschil = current_penalty - new_penalty
 
@@ -158,20 +163,14 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
             best = current.copy()
             best_penalty = current_penalty
 
+        beste_penalty_per_iteratie.append(best_penalty)
+
         if (i + 1) % cooling_it == 0:
             temp = temp * cooling_factor
 
-    return best, best_penalty
+    return best, best_penalty, penalty_per_iteratie, beste_penalty_per_iteratie
 
-def meta_improving_search(df_orders, sa_volgorde=None, iterations=1000):
-    # Begin met de beste oplossing uit SA
-    if sa_volgorde is None:
-        sa_volgorde, best_penalty = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
-    else:
-        sa_volgorde = sa_volgorde.copy()
-        gegevens = calculate_tard_pen(sa_volgorde, di_orders, di_machines, di_setups)
-        best_penalty = gegevens[1]
-
+def meta_improving_search(sa_volgorde):
     beste_volgorde = sa_volgorde.copy()
 
     gegevens = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
@@ -189,7 +188,6 @@ def meta_improving_search(df_orders, sa_volgorde=None, iterations=1000):
         ronde_beste_penalty = best_penalty
         ronde_beste_tard = best_tot_tard
 
-        # Alle mogelijke swaps onderzoeken
         for i in range(len(beste_volgorde)):
             for j in range(i + 1, len(beste_volgorde)):
                 new_current = beste_volgorde.copy()
@@ -206,20 +204,31 @@ def meta_improving_search(df_orders, sa_volgorde=None, iterations=1000):
                     ronde_beste_tard = current_tard
                     ronde_beste_volgorde = new_current.copy()
                     verbetering = True
-                beste_penalty_per_iteratie.append(best_penalty)
+
+                beste_penalty_per_iteratie.append(ronde_beste_penalty)
 
         if verbetering:
             best_penalty = ronde_beste_penalty
             best_tot_tard = ronde_beste_tard
             beste_volgorde = ronde_beste_volgorde.copy()
 
-        
-
     return best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
 
 
-best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie = meta_improving_search(df_orders, sa_volgorde)
+# Simulated Annealing uitvoeren
+sa_volgorde, sa_penalty, sa_penalties, sa_beste_penalties = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 
+# Improving Search uitvoeren
+best_tot_tard, best_penalty, beste_volgorde, dis_penalties, dis_beste_penalties = meta_improving_search(sa_volgorde)
+
+# Resultaten van beide algoritmen combineren
+penalty_per_iteratie = sa_penalties + dis_penalties
+beste_penalty_per_iteratie = sa_beste_penalties + dis_beste_penalties
+
+# Grafiek maken
+print('Laatste beste penalty SA:', sa_beste_penalties[-1])
+print('Eerste beste penalty DIS:', dis_beste_penalties[0])
+print('Eindpenalty DIS:', dis_beste_penalties[-1])
 plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie)
 
 tard, pen, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
@@ -229,3 +238,4 @@ print(f'De beste lijst is {beste_volgorde}, met een totale tardiness van {tard:.
 resultaten_naar_excel_list(beste_volgorde, di_orders, di_machines, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order, 'Results_SA_improved.xlsx')
 
 gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, pen)
+
