@@ -31,6 +31,18 @@ def gantt_chart(di_orders, di_machines, machines_per_order, setup_per_order, beg
 
     fig, ax = plt.subplots(figsize=(16, 7))
 
+    fig.patch.set_facecolor("#ffffff")
+    ax.set_facecolor("#ffffff")
+
+    ax.tick_params(axis="both", colors="#172448")
+
+    ax.xaxis.label.set_color("#172448")
+    ax.yaxis.label.set_color("#172448")
+    ax.title.set_color("#172448")
+
+    for spine in ax.spines.values():
+        spine.set_color("#dce3f2")
+
     kleur_dict = {
         'Red'   : '#ff6464',
         'Blue'  : 'blue',
@@ -188,6 +200,18 @@ def gantt_chart_list(volgorde, di_orders, di_machines, machines_per_order, setup
     '''
 
     fig, ax = plt.subplots(figsize=(16, 7))
+    
+    fig.patch.set_facecolor("#ffffff")
+    ax.set_facecolor("#ffffff")
+
+    ax.tick_params(axis="both", colors="#172448")
+
+    ax.xaxis.label.set_color("#172448")
+    ax.yaxis.label.set_color("#172448")
+    ax.title.set_color("#172448")
+
+    for spine in ax.spines.values():
+        spine.set_color("#dce3f2")
 
     kleur_dict = {
         'Red'   : '#fc564a',
