@@ -1,5 +1,6 @@
-import streamlit as st
+import matplotlib.pyplot as plt
 import pandas as pd
+import streamlit as st
 
 """PaintShop experiment dashboard, based on the four original OR5 algorithms.
 Run from OR5: python -m streamlit run Experiments.py
@@ -9,9 +10,6 @@ import math
 import random
 import time
 
-import matplotlib.pyplot as plt
-import pandas as pd
-import streamlit as st
 
 st.set_page_config(page_title='PaintShop Experiments', page_icon='🎨', layout='wide')
 st.markdown('''<style>.block-container{padding-top:1.8rem;max-width:1450px}
