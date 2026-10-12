@@ -205,7 +205,7 @@ def meta_improving_search(sa_volgorde):
                     ronde_beste_volgorde = new_current.copy()
                     verbetering = True
 
-                beste_penalty_per_iteratie.append(ronde_beste_penalty)
+                #beste_penalty_per_iteratie.append(ronde_beste_penalty)
 
         if verbetering:
             best_penalty = ronde_beste_penalty
