@@ -165,7 +165,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
         if (i + 1) % cooling_it == 0:
             temp *= cooling_factor
 
-    return best, best_penalty, penalty_per_iteratie, beste_penalty_per_iteratie, temperatuur_per_iteratie
+    return best, best_penalty, penalty_per_iteratie, penalty_per_iteratie, temperatuur_per_iteratie
 
 
 def meta_improving_search(sa_volgorde):
