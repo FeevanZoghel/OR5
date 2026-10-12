@@ -128,24 +128,22 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
 # Begin Improving Search
 
+
 def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     current = df_orders['Order'].tolist()
     random.shuffle(current)
-
     _, current_penalty, _, _, _, _, _, _, _, _ = calculate_tard_pen(current, di_orders, di_machines, di_setups)
-
     best = current.copy()
     best_penalty = current_penalty
-
     penalty_per_iteratie = []
     beste_penalty_per_iteratie = []
+    temperatuur_per_iteratie = []
 
     for i in range(t_max):
         new_current = random_swap(current)
         _, new_penalty, _, _, _, _, _, _, _, _ = calculate_tard_pen(new_current, di_orders, di_machines, di_setups)
-
         penalty_per_iteratie.append(new_penalty)
-
+        temperatuur_per_iteratie.append(temp)
         verschil = current_penalty - new_penalty
 
         if verschil > 0:
@@ -153,9 +151,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
             current_penalty = new_penalty
         else:
             kans = m.exp(verschil / temp)
-            getal = random.choices([0, 1], weights=[1 - kans, kans])[0]
-
-            if getal == 1:
+            if random.random() < kans:
                 current = new_current.copy()
                 current_penalty = new_penalty
 
@@ -166,9 +162,10 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
         beste_penalty_per_iteratie.append(best_penalty)
 
         if (i + 1) % cooling_it == 0:
-            temp = temp * cooling_factor
+            temp *= cooling_factor
 
-    return best, best_penalty, penalty_per_iteratie, beste_penalty_per_iteratie
+    return best, best_penalty, penalty_per_iteratie, beste_penalty_per_iteratie, temperatuur_per_iteratie
+
 
 def meta_improving_search(sa_volgorde):
     beste_volgorde = sa_volgorde.copy()
@@ -205,7 +202,7 @@ def meta_improving_search(sa_volgorde):
                     ronde_beste_volgorde = new_current.copy()
                     verbetering = True
 
-                #beste_penalty_per_iteratie.append(ronde_beste_penalty)
+                beste_penalty_per_iteratie.append(ronde_beste_penalty)
 
         if verbetering:
             best_penalty = ronde_beste_penalty
@@ -215,21 +212,36 @@ def meta_improving_search(sa_volgorde):
     return best_tot_tard, best_penalty, beste_volgorde, penalty_per_iteratie, beste_penalty_per_iteratie
 
 
-# Simulated Annealing uitvoeren
-sa_volgorde, sa_penalty, sa_penalties, sa_beste_penalties = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 
-# Improving Search uitvoeren
+# Simulated Annealing uitvoeren
+sa_volgorde, sa_penalty, sa_penalties, sa_beste_penalties, sa_temperaturen = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
+
+# Improving Search uitvoeren, maar niet in de grafiek tonen
 best_tot_tard, best_penalty, beste_volgorde, dis_penalties, dis_beste_penalties = meta_improving_search(sa_volgorde)
 
-# Resultaten van beide algoritmen combineren
-penalty_per_iteratie = sa_penalties + dis_penalties
-beste_penalty_per_iteratie = sa_beste_penalties + dis_beste_penalties
+# Grafiek van alleen Simulated Annealing
+fig, ax1 = plt.subplots(figsize=(12, 6))
+ax1.plot(sa_penalties, color='tab:blue', alpha=0.5, linewidth=0.8, label='Geteste penalty')
+ax1.plot(sa_beste_penalties, color='tab:orange', linewidth=2, label='Beste penalty')
+ax1.set_xlabel('Iteratie')
+ax1.set_ylabel('Penalty')
+ax1.grid(True, alpha=0.3)
 
-# Grafiek maken
-print('Laatste beste penalty SA:', sa_beste_penalties[-1])
-print('Eerste beste penalty DIS:', dis_beste_penalties[0])
-print('Eindpenalty DIS:', dis_beste_penalties[-1])
-plot_penalty(penalty_per_iteratie, beste_penalty_per_iteratie)
+# Temperatuur op de rechter y-as
+ax2 = ax1.twinx()
+ax2.plot(sa_temperaturen, color='tab:red', linewidth=1.5, label='Temperatuur')
+ax2.set_ylabel('Temperatuur', color='tab:red')
+ax2.tick_params(axis='y', labelcolor='tab:red')
+
+# Legenda's combineren
+lijnen1, labels1 = ax1.get_legend_handles_labels()
+lijnen2, labels2 = ax2.get_legend_handles_labels()
+ax1.legend(lijnen1 + lijnen2, labels1 + labels2, loc='upper right')
+
+plt.title('Simulated Annealing: penalty en temperatuur')
+plt.tight_layout()
+plt.show()
+
 
 tard, pen, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
 
