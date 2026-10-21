@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import time
 
 # Instellingen
-t_max = 100000
+t_max = 1000000
 cooling_factor = 0.99
 cooling_it = 1000
 temp = 1000
