@@ -11,8 +11,7 @@ import time
 # Instellingen experimenten
 t_max = 70000
 
-# temp_values = [120, 200, 500, 750, 1000]
-temp_values = [750,1000]
+temp = 500
 cooling_it_values = [700, 1000, 1400, 7000]
 random_seed_values = [1, 9, 14, 32, 88]
 
@@ -473,40 +472,38 @@ def verwerk_resultaat(
         beste_temperature_history = temperature_history
 
 
-# Experimenten met temp, cooling_it en verschillende random seeds
-for temp in temp_values:
 
-    for cooling_it in cooling_it_values:
+for cooling_it in cooling_it_values:
 
-        # Aantal temperatuurverlagingen
-        k = t_max // cooling_it
+    # Aantal temperatuurverlagingen
+    k = t_max // cooling_it
 
-        # Cooling factor automatisch berekenen
-        cooling_factor = eindtemperatuur_factor ** (1 / k)
+    # Cooling factor automatisch berekenen
+    cooling_factor = eindtemperatuur_factor ** (1 / k)
 
-        for seed in random_seed_values:
+    for seed in random_seed_values:
 
-            (
-                resultaat,
-                beste_volgorde,
-                current_history,
-                best_history,
-                temperature_history
-            ) = voer_experiment_uit(
-                t_max,
-                cooling_factor,
-                cooling_it,
-                temp,
-                random_seed=seed
-            )
+        (
+            resultaat,
+            beste_volgorde,
+            current_history,
+            best_history,
+            temperature_history
+        ) = voer_experiment_uit(
+            t_max,
+            cooling_factor,
+            cooling_it,
+            temp,
+            random_seed=seed
+        )
 
-            verwerk_resultaat(
-                resultaat,
-                beste_volgorde,
-                current_history,
-                best_history,
-                temperature_history
-            )
+        verwerk_resultaat(
+            resultaat,
+            beste_volgorde,
+            current_history,
+            best_history,
+            temperature_history
+        )
 
 
 # Alle resultaten naar Excel
