@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 import time
 
 # Instellingen experimenten
-t_max_values = [100, 500, 1000, 5000, 10000, 50000, 500000, 1000000]
+t_max_values = [100, 500, 1000, 5000, 10000, 50000, 500000]
 cooling_factor_values = [0.90, 0.95, 0.97, 0.99, 0.995]
 cooling_it_values = [100, 250, 500, 1000, 2000]
 temp_values = [100, 250, 500, 1000, 2000]
-random_seed_values = [1, 5, 10, 42, 100]
+random_seed_values = [1, 2, 3, 4, 6]
 
 # Standaardinstellingen
-t_max = 500000
+t_max = 50000
 cooling_factor = 0.99
 cooling_it = 1000
 temp = 1000
@@ -262,11 +262,11 @@ for waarde in random_seed_values:
     experimenten['random_seed'].append(resultaat)
 
 # Alle experimenten naar verschillende Excel-sheets
-with pd.ExcelWriter('Experimenten.xlsx', engine='openpyxl') as writer:
+with pd.ExcelWriter('Experimenten2.xlsx', engine='openpyxl') as writer:
     for sheetnaam, resultaten in experimenten.items():
         pd.DataFrame(resultaten).to_excel(writer, sheet_name=sheetnaam, index=False)
 
-print('\nAlle experimenten zijn opgeslagen in Experimenten.xlsx')
+print('\nAlle experimenten zijn opgeslagen in Experimenten2.xlsx')
 
 # Grafiek van het laatste experiment
 plot_sa_progress(current_history, best_history, temperature_history)
