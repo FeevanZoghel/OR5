@@ -10,9 +10,9 @@ import time
 
 # Instellingen experimenten
 t_max = 70000
-cooling_factor = 0.99
-cooling_it = 1000
-temp = 1000
+cooling_factor = 0.9550
+cooling_it = 700
+temp =200
 
 # 50 verschillende random seeds, waaronder 1 en 88
 random_seed_values = [1, 88] + list(range(2, 50))
