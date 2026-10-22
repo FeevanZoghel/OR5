@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import time
 
 # Instellingen experimenten
-t_max_values = [100, 500, 1000, 5000, 10000, 50000, 1000000]
+t_max_values = [100, 500, 1000, 5000, 10000, 50000,500000, 1000000]
 cooling_factor_values = [0.90, 0.95, 0.97, 0.99, 0.995]
 cooling_it_values = [100, 250, 500, 1000, 2000]
 temp_values = [100, 250, 500, 1000, 2000]
@@ -190,7 +190,7 @@ def plot_sa_progress(current_history, best_history, temperature_history):
 
 
 # Experimenten uitvoeren
-def voer_experiment_uit(t_max, cooling_factor, cooling_it, temp, random_seed=5):
+def voer_experiment_uit(t_max, cooling_factor, cooling_it, temp, random_seed=1):
     random.seed(random_seed)
     print(f'\nExperiment: t_max={t_max}, cooling_factor={cooling_factor}, cooling_it={cooling_it}, temp={temp}')
 

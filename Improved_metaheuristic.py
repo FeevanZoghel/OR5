@@ -184,7 +184,7 @@ def plot_sa_progress(current_history, best_history, temperature_history):
     plt.show()
 
 # Simulated Annealing uitvoeren
-random.seed(5)
+random.seed(1)
 start_sa = time.perf_counter()
 sa_volgorde, sa_penalty, current_history, best_history, temperature_history = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 rekentijd_sa = time.perf_counter() - start_sa
