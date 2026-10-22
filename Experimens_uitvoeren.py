@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 import time
 
 # Instellingen experimenten
-t_max_values = [100, 500, 1000, 5000, 10000, 50000,500000, 1000000]
+t_max_values = [100, 500, 1000, 5000, 10000, 50000, 500000, 1000000]
 cooling_factor_values = [0.90, 0.95, 0.97, 0.99, 0.995]
 cooling_it_values = [100, 250, 500, 1000, 2000]
 temp_values = [100, 250, 500, 1000, 2000]
 random_seed_values = [1, 5, 10, 42, 100]
 
 # Standaardinstellingen
-t_max = 50000
+t_max = 500000
 cooling_factor = 0.99
 cooling_it = 1000
 temp = 1000
