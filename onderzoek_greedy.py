@@ -548,6 +548,63 @@ df_beste_combinaties = (
 
 
 # --------------------------------------------------
+# DEEL 4: ALLE DRIE DE MACHINES GELIJKTIJDIG VERHOGEN
+# --------------------------------------------------
+
+# Snelheidsverhogingen voor alle drie de machines
+verhogingen_p_mach = [0, 5, 10, 15, 20, 25, 30]
+
+resultaten_verfijnd = []
+
+for verhoging in verhogingen_p_mach:
+
+    # Alle drie de machines krijgen dezelfde verhoging
+    verhoging_per_machine = [
+        verhoging
+    ] * aantal_machines
+
+    # Greedy en Improving Search uitvoeren
+    penalty_greedy, penalty_improved = voer_experiment_uit(
+        verhoging_per_machine
+    )
+
+    # Resultaten opslaan
+    resultaten_verfijnd.append({
+        'Snelheidsverhoging (%)': verhoging,
+        'M1 (%)': verhoging,
+        'M2 (%)': verhoging,
+        'M3 (%)': verhoging,
+        'Penalty Greedy': penalty_greedy,
+        'Penalty Improved': penalty_improved
+    })
+
+    print(
+        f'Alle machines +{verhoging}% | '
+        f'Greedy: {penalty_greedy:.2f} | '
+        f'Improved: {penalty_improved:.2f}'
+    )
+
+# DataFrame maken
+df_verfijnd = pd.DataFrame(resultaten_verfijnd)
+
+# Procentuele verbetering ten opzichte van nulmeting
+if penalty_greedy_0 != 0:
+    df_verfijnd['Verbetering Greedy (%)'] = (
+        (penalty_greedy_0 - df_verfijnd['Penalty Greedy'])
+        / penalty_greedy_0 * 100
+    )
+else:
+    df_verfijnd['Verbetering Greedy (%)'] = 0
+
+if penalty_improved_0 != 0:
+    df_verfijnd['Verbetering Improved (%)'] = (
+        (penalty_improved_0 - df_verfijnd['Penalty Improved'])
+        / penalty_improved_0 * 100
+    )
+else:
+    df_verfijnd['Verbetering Improved (%)'] = 0
+
+# --------------------------------------------------
 # DEEL 4: ALLES OPSLAAN IN HETZELFDE EXCELBESTAND
 # --------------------------------------------------
 
@@ -583,6 +640,13 @@ with pd.ExcelWriter(
         sheet_name='Beste combinaties',
         index=False
     )
+
+    # Tabblad 5: Alle drie de machines verfijnd
+    df_verfijnd.to_excel(
+        writer,
+        sheet_name='Alle 3 verfijnd',
+        index=False
+    )  
 
 
 print('\nOnderzoek afgerond!')
