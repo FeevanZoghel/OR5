@@ -15,7 +15,7 @@ temp = 500
 random.seed(4)
 
 # Data inladen
-df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
+df = pd.read_excel('PaintShop-september2026.xlsx', sheet_name=None)
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
