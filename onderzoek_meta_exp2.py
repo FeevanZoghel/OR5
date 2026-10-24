@@ -11,7 +11,7 @@ import time
 # INSTELLINGEN
 # --------------------------------------------------
 
-t_max = 70000
+t_max = 700000
 cooling_it = 700
 k = t_max / cooling_it
 cooling_factor = 0.01 ** (1 / k)
@@ -20,7 +20,7 @@ temp = 500
 seed = 4
 
 # Snelheidsverhogingen
-verhogingen = [0]
+verhogingen = [25,26,27,28,29,30]
 
 
 # --------------------------------------------------
@@ -28,7 +28,7 @@ verhogingen = [0]
 # --------------------------------------------------
 
 df = pd.read_excel(
-    'PaintShop-September2026_kopie.xlsx',
+    'PaintShop-September2026.xlsx',
     sheet_name=None
 )
 
@@ -148,7 +148,7 @@ def SA(df_orders, di_orders, di_machines, di_setups,
 
     current = df_orders['Order'].tolist()
 
-    random.shuffle(current)
+    # random.shuffle(current)
 
     current_penalty = calculate_tard_pen(
         current,
@@ -185,11 +185,6 @@ def SA(df_orders, di_orders, di_machines, di_setups,
 
             best = current.copy()
             best_penalty = current_penalty
-
-        # Stop zodra een penalty van 0 is gevonden
-        if best_penalty <= 0:
-            print(f'Penalty 0 gevonden na {i + 1} iteraties!')
-            break
 
         if (i + 1) % cooling_it == 0:
             temp *= cooling_factor
@@ -371,14 +366,6 @@ for verhoging in verhogingen:
         f'Improved: {penalty_improved:.2f} | '
         f'Tijd: {rekentijd_sa + rekentijd_improving:.2f} s'
     )
-
-    # Stop met experimenteren als de penalty 0 is
-    if penalty_improved <= 0:
-        print(
-            f'\nPenalty 0 bereikt bij een snelheidsverhoging '
-            f'van {verhoging}% voor alle machines!'
-        )
-        break
 
 
 # --------------------------------------------------

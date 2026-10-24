@@ -7,12 +7,12 @@ import matplotlib.pyplot as plt
 import time
 
 # Instellingen
-t_max = 500000
-cooling_it = 700
+t_max = 70000
+cooling_it = 100
 k = t_max/cooling_it
 cooling_factor = 0.01**(1/k)
-temp = 500
-random.seed(4)
+temp = 100
+random.seed(14)
 
 # Data inladen
 df = pd.read_excel('PaintShop-september2026.xlsx', sheet_name=None)
