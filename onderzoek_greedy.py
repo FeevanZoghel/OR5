@@ -317,12 +317,84 @@ def improving_search(di_orders, di_machines, di_setups):
     )
 
 
-# Experiment uitvoeren
+
+from itertools import combinations, product
+import pandas as pd
+
+# Instellingen
+verhogingen = [0, 10, 20, 30, 50]
+
+aantal_machines = len(di_machines_org)
+
+# Oorspronkelijke machinesnelheden
+originele_snelheden = [
+    machine['Speed']
+    for machine in di_machines_org
+]
+
+
+def maak_machines(verhoging_per_machine):
+    """
+    Maakt een nieuwe lijst met machines en past
+    de opgegeven snelheidsverhogingen toe.
+    """
+
+    di_machines = [
+        machine.copy()
+        for machine in di_machines_org
+    ]
+
+    for i in range(aantal_machines):
+        di_machines[i]['Speed'] = (
+            originele_snelheden[i]
+            * (1 + verhoging_per_machine[i] / 100)
+        )
+
+    return di_machines
+
+
+def voer_experiment_uit(verhoging_per_machine):
+    """
+    Voert Greedy en Improving Search uit voor
+    de opgegeven machinesnelheden.
+
+    Return:
+        penalty_greedy
+        penalty_improved
+    """
+
+    di_machines = maak_machines(verhoging_per_machine)
+
+    # Greedy
+    volgordes, _ = greedy_schedule(
+        di_orders,
+        di_machines,
+        di_setups
+    )
+
+    _, penalty_greedy = calculate_results(
+        volgordes,
+        di_orders,
+        di_machines,
+        di_setups
+    )
+
+    # Improving Search
+    _, penalty_improved, _, _, _ = improving_search(
+        di_orders,
+        di_machines,
+        di_setups
+    )
+
+    return penalty_greedy, penalty_improved
+
+
+# --------------------------------------------------
+# DEEL 1: MACHINES AFZONDERLIJK VERSNELLEN
+# --------------------------------------------------
 
 resultaten_greedy = []
 resultaten_improved = []
-
-aantal_machines = len(di_machines_org)
 
 for verhoging in verhogingen:
 
@@ -336,85 +408,191 @@ for verhoging in verhogingen:
 
     for machine_index in range(aantal_machines):
 
-        # Oorspronkelijke machines kopiëren
-        di_machines = [
-            machine.copy()
-            for machine in di_machines_org
-        ]
+        verhoging_per_machine = [0] * aantal_machines
+        verhoging_per_machine[machine_index] = verhoging
 
-        # Alleen de geselecteerde machine versnellen
-        di_machines[machine_index]['Speed'] *= (
-            1 + verhoging / 100
+        penalty_greedy, penalty_improved = voer_experiment_uit(
+            verhoging_per_machine
         )
 
-        # Greedy-planning
-        volgordes, _ = greedy_schedule(
-            di_orders,
-            di_machines,
-            di_setups
-        )
-
-        total_tardiness, total_penalty = calculate_results(
-            volgordes,
-            di_orders,
-            di_machines,
-            di_setups
-        )
-
-        # Improving Search
-        (
-            best_tot_tard,
-            best_penalty,
-            beste_volgorde,
-            penalty_per_iteratie,
-            beste_penalty_per_iteratie
-        ) = improving_search(
-            di_orders,
-            di_machines,
-            di_setups
-        )
-
-        # Resultaten opslaan
         kolomnaam = f'M{machine_index + 1} - Penalty'
 
-        rij_greedy[kolomnaam] = total_penalty
-        rij_improved[kolomnaam] = best_penalty
+        rij_greedy[kolomnaam] = penalty_greedy
+        rij_improved[kolomnaam] = penalty_improved
 
         print(
-            f'M{machine_index + 1} | '
+            f'Afzonderlijk | M{machine_index + 1} '
             f'+{verhoging}% | '
-            f'Greedy: {total_penalty:.2f} | '
-            f'Improved: {best_penalty:.2f}'
+            f'Greedy: {penalty_greedy:.2f} | '
+            f'Improved: {penalty_improved:.2f}'
         )
 
     resultaten_greedy.append(rij_greedy)
     resultaten_improved.append(rij_improved)
 
 
-# Resultaten naar Excel
-
 df_greedy = pd.DataFrame(resultaten_greedy)
 df_improved = pd.DataFrame(resultaten_improved)
 
-with pd.ExcelWriter('onderzoek_greedy.xlsx', engine='openpyxl') as writer:
 
+# --------------------------------------------------
+# DEEL 2: MEERDERE MACHINES TEGELIJK VERSNELLEN
+# --------------------------------------------------
+
+resultaten_combinaties = []
+
+# Nulmeting
+penalty_greedy_0, penalty_improved_0 = voer_experiment_uit(
+    [0] * aantal_machines
+)
+
+resultaten_combinaties.append({
+    'Combinatie': 'Geen verhoging',
+    **{
+        f'M{i + 1} (%)': 0
+        for i in range(aantal_machines)
+    },
+    'Totale verhoging (%)': 0,
+    'Penalty Greedy': penalty_greedy_0,
+    'Penalty Improved': penalty_improved_0
+})
+
+# Alle combinaties van 2 of meer machines
+for aantal in range(2, aantal_machines + 1):
+
+    for machine_combinatie in combinations(
+        range(aantal_machines), aantal
+    ):
+
+        # Iedere geselecteerde machine krijgt
+        # een eigen snelheidsverhoging
+        for percentages in product(
+            verhogingen[1:], repeat=aantal
+        ):
+
+            verhoging_per_machine = [0] * aantal_machines
+
+            for machine_index, percentage in zip(
+                machine_combinatie, percentages
+            ):
+                verhoging_per_machine[machine_index] = percentage
+
+            # Experiment uitvoeren
+            penalty_greedy, penalty_improved = voer_experiment_uit(
+                verhoging_per_machine
+            )
+
+            combinatie_naam = ' + '.join(
+                f'M{i + 1}'
+                for i in machine_combinatie
+            )
+
+            # Resultaten opslaan
+            rij = {
+                'Combinatie': combinatie_naam
+            }
+
+            for i in range(aantal_machines):
+                rij[f'M{i + 1} (%)'] = verhoging_per_machine[i]
+
+            rij['Totale verhoging (%)'] = sum(
+                verhoging_per_machine
+            )
+
+            rij['Penalty Greedy'] = penalty_greedy
+            rij['Penalty Improved'] = penalty_improved
+
+            resultaten_combinaties.append(rij)
+
+            print(
+                f'Combinatie | {combinatie_naam} | '
+                f'{verhoging_per_machine} | '
+                f'Greedy: {penalty_greedy:.2f} | '
+                f'Improved: {penalty_improved:.2f}'
+            )
+
+
+# --------------------------------------------------
+# DEEL 3: RESULTATEN VERWERKEN
+# --------------------------------------------------
+
+df_combinaties = pd.DataFrame(resultaten_combinaties)
+
+# Procentuele verbetering ten opzichte van nulmeting
+if penalty_greedy_0 != 0:
+    df_combinaties['Verbetering Greedy (%)'] = (
+        (penalty_greedy_0 - df_combinaties['Penalty Greedy'])
+        / penalty_greedy_0 * 100
+    )
+else:
+    df_combinaties['Verbetering Greedy (%)'] = 0
+
+if penalty_improved_0 != 0:
+    df_combinaties['Verbetering Improved (%)'] = (
+        (penalty_improved_0 - df_combinaties['Penalty Improved'])
+        / penalty_improved_0 * 100
+    )
+else:
+    df_combinaties['Verbetering Improved (%)'] = 0
+
+
+# Beste combinatie per groep
+df_beste_combinaties = (
+    df_combinaties
+    .sort_values(
+        by=['Penalty Improved', 'Totale verhoging (%)']
+    )
+    .drop_duplicates(subset=['Combinatie'])
+    .reset_index(drop=True)
+)
+
+
+# --------------------------------------------------
+# DEEL 4: ALLES OPSLAAN IN HETZELFDE EXCELBESTAND
+# --------------------------------------------------
+
+with pd.ExcelWriter(
+    'onderzoek_greedy.xlsx',
+    engine='openpyxl'
+) as writer:
+
+    # Tabblad 1
     df_greedy.to_excel(
         writer,
         sheet_name='Greedy',
         index=False
     )
 
+    # Tabblad 2
     df_improved.to_excel(
         writer,
         sheet_name='Improved Greedy',
         index=False
     )
 
-print('\nOnderzoek machinesnelheden afgerond!')
+    # Tabblad 3
+    df_combinaties.to_excel(
+        writer,
+        sheet_name='Alle combinaties',
+        index=False
+    )
+
+    # Tabblad 4
+    df_beste_combinaties.to_excel(
+        writer,
+        sheet_name='Beste combinaties',
+        index=False
+    )
+
+
+print('\nOnderzoek afgerond!')
 print('\nGreedy:')
 print(df_greedy.to_string(index=False))
 
 print('\nImproved Greedy:')
 print(df_improved.to_string(index=False))
 
-print('\nResultaten opgeslagen in onderzoek_greedy.xlsx')
+print('\nBeste combinaties:')
+print(df_beste_combinaties.to_string(index=False))
+
+print('\nAlle resultaten opgeslagen in onderzoek_greedy.xlsx')
