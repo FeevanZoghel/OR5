@@ -148,7 +148,7 @@ def SA(df_orders, di_orders, di_machines, di_setups,
 
     current = df_orders['Order'].tolist()
 
-    # random.shuffle(current)
+    random.shuffle(current)
 
     current_penalty = calculate_tard_pen(
         current,
@@ -333,26 +333,76 @@ def voer_experiment_uit(verhoging_per_machine):
     )
 
 
+
+# --------------------------------------------------
+# EXPERIMENTEN MET COMBINATIES
+# --------------------------------------------------
+
+combinaties = [
+    [27, 27, 20],
+    [25, 25, 25],
+    [25, 27, 20],
+    [27, 25, 20],
+    [27, 27, 22],
+    [26, 26, 20],
+    [26, 27, 20],
+    [27, 26, 20],
+    [28, 28, 20]
+]
+
+# Maximale rekentijd: 15 minuten
+max_rekentijd = 15 * 60
+
+# Geschatte tijd per volledige run
+geschatte_run_tijd = 100
+
 resultaten = []
+start_totaal = time.perf_counter()
 
-for verhoging in verhogingen:
+bestandsnaam = 'onderzoek_meta_combinaties.xlsx'
 
-    # Alle drie de machines krijgen dezelfde verhoging
-    verhoging_per_machine = [verhoging] * aantal_machines
+for nummer, combinatie in enumerate(combinaties, start=1):
 
-    # Simulated Annealing + Improving Search uitvoeren
+    verstreken_tijd = time.perf_counter() - start_totaal
+    resterende_tijd = max_rekentijd - verstreken_tijd
+
+    # Geen nieuwe run starten als er te weinig tijd over is
+    if resterende_tijd < geschatte_run_tijd:
+        print('\nTijdslimiet bijna bereikt.')
+        break
+
+    print(
+        f'\nExperiment {nummer}/{len(combinaties)}: '
+        f'M1 +{combinatie[0]}%, '
+        f'M2 +{combinatie[1]}%, '
+        f'M3 +{combinatie[2]}%'
+    )
+
+    # SA + Improving Search uitvoeren
     (
         penalty_sa,
         penalty_improved,
         rekentijd_sa,
         rekentijd_improving
-    ) = voer_experiment_uit(verhoging_per_machine)
+    ) = voer_experiment_uit(combinatie)
+
+    # Werkelijke gezamenlijke capaciteitsverhoging
+    nieuwe_snelheden = [
+        originele_snelheden[i] * (1 + combinatie[i] / 100)
+        for i in range(aantal_machines)
+    ]
+
+    capaciteit_verhoging = (
+        (sum(nieuwe_snelheden) / sum(originele_snelheden) - 1)
+        * 100
+    )
 
     resultaten.append({
-        'Snelheidsverhoging (%)': verhoging,
-        'M1 (%)': verhoging,
-        'M2 (%)': verhoging,
-        'M3 (%)': verhoging,
+        'Experiment': nummer,
+        'M1 (%)': combinatie[0],
+        'M2 (%)': combinatie[1],
+        'M3 (%)': combinatie[2],
+        'Capaciteitsverhoging (%)': capaciteit_verhoging,
         'Penalty SA': penalty_sa,
         'Penalty SA Improved': penalty_improved,
         'Rekentijd SA (s)': rekentijd_sa,
@@ -360,50 +410,38 @@ for verhoging in verhogingen:
         'Totale rekentijd (s)': rekentijd_sa + rekentijd_improving
     })
 
+    # Resultaten na iedere run opslaan
+    df_resultaten = pd.DataFrame(resultaten)
+
+    df_resultaten.to_excel(
+        bestandsnaam,
+        sheet_name='Combinaties',
+        index=False
+    )
+
     print(
-        f'Alle machines +{verhoging}% | '
         f'SA: {penalty_sa:.2f} | '
         f'Improved: {penalty_improved:.2f} | '
         f'Tijd: {rekentijd_sa + rekentijd_improving:.2f} s'
     )
 
-
 # --------------------------------------------------
-# RESULTATEN VERWERKEN
-# --------------------------------------------------
-
-df_resultaten = pd.DataFrame(resultaten)
-
-# Nulmeting
-penalty_sa_0 = df_resultaten.loc[0, 'Penalty SA']
-penalty_improved_0 = df_resultaten.loc[0, 'Penalty SA Improved']
-
-# Procentuele verbetering ten opzichte van 0%
-if penalty_sa_0 != 0:
-    df_resultaten['Verbetering SA (%)'] = (
-        (penalty_sa_0 - df_resultaten['Penalty SA'])
-        / penalty_sa_0 * 100
-    )
-
-if penalty_improved_0 != 0:
-    df_resultaten['Verbetering Improved (%)'] = (
-        (penalty_improved_0 - df_resultaten['Penalty SA Improved'])
-        / penalty_improved_0 * 100
-    )
-
-
-# --------------------------------------------------
-# RESULTATEN NAAR APART EXCELBESTAND
+# RESULTATEN
 # --------------------------------------------------
 
-bestandsnaam = 'onderzoek_meta_alle_machines.xlsx'
-
-df_resultaten.to_excel(
-    bestandsnaam,
-    sheet_name='Alle machines',
-    index=False
-)
+totale_rekentijd = time.perf_counter() - start_totaal
 
 print('\nOnderzoek afgerond!')
-print(df_resultaten.to_string(index=False))
-print(f'\nResultaten opgeslagen in {bestandsnaam}')
+print(f'Totale rekentijd: {totale_rekentijd:.2f} seconden')
+print(f'Resultaten opgeslagen in {bestandsnaam}')
+
+if resultaten:
+    df_resultaten = pd.DataFrame(resultaten)
+
+    print('\nBeste gevonden combinatie:')
+
+    beste_resultaat = df_resultaten.loc[
+        df_resultaten['Penalty SA Improved'].idxmin()
+    ]
+
+    print(beste_resultaat.to_string())
