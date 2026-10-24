@@ -12,7 +12,7 @@ import time
 # INSTELLINGEN
 # --------------------------------------------------
 
-t_max = 10000
+t_max = 70000
 cooling_it = 700
 k = t_max / cooling_it
 cooling_factor = 0.01 ** (1 / k)
