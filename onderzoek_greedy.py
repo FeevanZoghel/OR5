@@ -604,8 +604,72 @@ if penalty_improved_0 != 0:
 else:
     df_verfijnd['Verbetering Improved (%)'] = 0
 
+
+
 # --------------------------------------------------
-# DEEL 4: ALLES OPSLAAN IN HETZELFDE EXCELBESTAND
+# DEEL 6: COMBINATIES VAN 20% TOT 30%
+# --------------------------------------------------
+
+# Snelheidsverhogingen van 20% t/m 30%, stappen van 1%
+verhogingen_20_30 = list(range(20, 31))
+
+resultaten_20_30 = []
+
+# Alle mogelijke combinaties van M1, M2 en M3
+for percentages in product(
+    verhogingen_20_30,
+    repeat=aantal_machines
+):
+
+    verhoging_per_machine = list(percentages)
+
+    # Greedy en Improving Search uitvoeren
+    penalty_greedy, penalty_improved = voer_experiment_uit(
+        verhoging_per_machine
+    )
+
+    resultaten_20_30.append({
+        'M1 (%)': verhoging_per_machine[0],
+        'M2 (%)': verhoging_per_machine[1],
+        'M3 (%)': verhoging_per_machine[2],
+        'Totale verhoging (%)': sum(verhoging_per_machine),
+        'Penalty Greedy': penalty_greedy,
+        'Penalty Improved': penalty_improved
+    })
+
+    print(
+        f'Combinatie {verhoging_per_machine} | '
+        f'Greedy: {penalty_greedy:.2f} | '
+        f'Improved: {penalty_improved:.2f}'
+    )
+
+
+# --------------------------------------------------
+# RESULTATEN VERWERKEN
+# --------------------------------------------------
+
+df_20_30 = pd.DataFrame(resultaten_20_30)
+
+# Sorteren op laagste penalty en daarna totale verhoging
+df_20_30 = (
+    df_20_30
+    .sort_values(
+        by=['Penalty Improved', 'Totale verhoging (%)']
+    )
+    .reset_index(drop=True)
+)
+
+# Alleen combinaties met penalty nul
+df_20_30_nul = df_20_30[
+    df_20_30['Penalty Improved'].abs() < 1e-9
+].copy()
+
+# Beste 20 combinaties
+df_20_30_top20 = df_20_30.head(20).copy()
+
+
+# --------------------------------------------------
+# DEEL 6: ALLES OPSLAAN IN HETZELFDE EXCELBESTAND
 # --------------------------------------------------
 
 with pd.ExcelWriter(
@@ -646,7 +710,31 @@ with pd.ExcelWriter(
         writer,
         sheet_name='Alle 3 verfijnd',
         index=False
-    )  
+    ) 
+    
+    
+    # Tabblad 9: Alle combinaties tussen 20% en 30%
+    df_20_30.to_excel(
+        writer,
+        sheet_name='Combinaties 20-30',
+        index=False
+    )
+
+    # Tabblad 10: Beste 20 combinaties
+    df_20_30_top20.to_excel(
+        writer,
+        sheet_name='Top 20 (20-30)',
+        index=False
+    )
+
+    # Tabblad 11: Combinaties met penalty nul
+    df_20_30_nul.to_excel(
+        writer,
+        sheet_name='Penalty nul 20-30',
+        index=False
+    )
+
+ 
 
 
 print('\nOnderzoek afgerond!')
