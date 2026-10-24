@@ -8,9 +8,11 @@ import time
 
 # Instellingen
 t_max = 500000
-cooling_factor = 0.99
-cooling_it = 1000
-temp = 1000
+cooling_it = 700
+k = t_max/cooling_it
+cooling_factor = 0.01**(1/k)
+temp = 500
+random.seed(4)
 
 # Data inladen
 df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
@@ -184,7 +186,7 @@ def plot_sa_progress(current_history, best_history, temperature_history):
     plt.show()
 
 # Simulated Annealing uitvoeren
-random.seed(1)
+
 start_sa = time.perf_counter()
 sa_volgorde, sa_penalty, current_history, best_history, temperature_history = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
 rekentijd_sa = time.perf_counter() - start_sa
