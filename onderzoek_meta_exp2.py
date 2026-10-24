@@ -11,7 +11,7 @@ import time
 # INSTELLINGEN
 # --------------------------------------------------
 
-t_max = 700000
+t_max = 70000
 cooling_it = 700
 k = t_max / cooling_it
 cooling_factor = 0.01 ** (1 / k)
@@ -20,7 +20,7 @@ temp = 500
 seed = 4
 
 # Snelheidsverhogingen
-verhogingen = [0, 5, 10, 15, 20, 25]
+verhogingen = [0]
 
 
 # --------------------------------------------------
@@ -28,7 +28,7 @@ verhogingen = [0, 5, 10, 15, 20, 25]
 # --------------------------------------------------
 
 df = pd.read_excel(
-    'PaintShop-September2026.xlsx',
+    'PaintShop-September2026_kopie.xlsx',
     sheet_name=None
 )
 
