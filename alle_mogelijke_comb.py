@@ -20,7 +20,7 @@ temp = 500
 seed = 4
 
 # Snelheidsverhogingen
-verhogingen = [25,26,27,28,29,30]
+verhogingen = [20, 21, 22, 23]
 
 
 # --------------------------------------------------
@@ -343,14 +343,14 @@ from itertools import product
 import os
 
 # Alle percentages van 20% t/m 30%
-verhogingen = list(range(20, 31))
+verhogingen = list(range(20, 24))
 
 # Alle mogelijke combinaties van M1, M2 en M3
 combinaties = list(product(verhogingen, repeat=3))
 
 print(f'Totaal aantal combinaties: {len(combinaties)}')
 
-bestandsnaam = 'onderzoek_meta_alle_combinaties.xlsx'
+bestandsnaam = 'onderzoek_meta_alle_combinaties_versie2.xlsx'
 
 # --------------------------------------------------
 # EERDERE RESULTATEN INLADEN
