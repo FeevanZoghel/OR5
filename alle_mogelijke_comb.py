@@ -350,7 +350,7 @@ combinaties = list(product(verhogingen, repeat=3))
 
 print(f'Totaal aantal combinaties: {len(combinaties)}')
 
-bestandsnaam = 'onderzoek_meta_alle_combinaties_versie2.xlsx'
+bestandsnaam = 'onderzoek_meta_alle_combinaties.xlsx'
 
 # --------------------------------------------------
 # EERDERE RESULTATEN INLADEN
