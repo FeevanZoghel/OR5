@@ -93,10 +93,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
                     break
 
             if not setup_gevonden:
-                raise ValueError(
-                    f"Geen setup gevonden van "
-                    f"{vorige_kleuren[machine_index]} naar {kleur}"
-                )
+                print(f"Geen setup gevonden van{vorige_kleuren[machine_index]} naar {kleur}")
 
         # Setup toevoegen aan de machinetijd
         tijden[machine_index] += setup_tijd

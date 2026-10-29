@@ -60,7 +60,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
                     setup_gevonden = True
                     break
             if not setup_gevonden:
-                raise ValueError(f"Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}")
+                print(f"Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}")
 
         productietijd = order['Surface'] / di_machines[machine_index]['Speed']
         begintijd = tijden[machine_index]

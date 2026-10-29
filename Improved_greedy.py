@@ -71,7 +71,7 @@ def plan_order(machine, order, tijd, vorige_kleur, di_setups):
                 break
 
         if setup_gevonden == False:
-            raise ValueError(f'Geen setup gevonden van {vorige_kleur} naar {kleur}')
+            print(f'Geen setup gevonden van {vorige_kleur} naar {kleur}')
 
     # Begintijd
     begintijd = tijd
@@ -152,7 +152,7 @@ def greedy_schedule(di_orders, di_machines, di_setups):
                     break
 
             if setup_gevonden == False:
-                raise ValueError(f"Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}")
+                print(f"Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}")
 
         # Productietijd
         tijden[machine_index] += order['Surface'] / di_machines[machine_index]['Speed']

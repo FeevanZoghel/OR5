@@ -6,21 +6,21 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 import time
+from itertools import product
 
 
 # Instellingen experimenten
-t_max = 70000
-
-temp = 500
-cooling_it_values = [700, 1000, 1400, 7000]
-random_seed_values = [1, 9, 14, 32, 88]
+t_max_values = [700000, 7000000]
+temp_values = [1000]
+cooling_it_values = [700, 1400, 7000]
+random_seed_values = [1, 88]
 
 # Eindtemperatuur = 1% van de begintemperatuur
 eindtemperatuur_factor = 0.01
 
 
 # Data inladen
-df = pd.read_excel('PaintShop-September2026.xlsx', sheet_name=None)
+df = pd.read_excel('PaintShop-November2026.xlsx', sheet_name=None)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
@@ -112,9 +112,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
         )
 
         begintijd = tijden[machine_index]
-
         tijden[machine_index] += productietijd
-
         eindtijd = tijden[machine_index]
 
         sequence_numbers[machine_index] += 1
@@ -344,6 +342,22 @@ def plot_sa_progress(
     plt.show()
 
 
+# Cooling factor automatisch berekenen
+def bereken_cooling_factor(t_max, cooling_it):
+    '''Berekent de cooling factor voor 1% eindtemperatuur.'''
+
+    # Aantal temperatuurverlagingen
+    k = t_max // cooling_it
+
+    if k == 0:
+        # Geen temperatuurverlaging binnen deze run
+        return 1.0
+
+    cooling_factor = eindtemperatuur_factor ** (1 / k)
+
+    return cooling_factor
+
+
 # Experimenten uitvoeren
 def voer_experiment_uit(
     t_max,
@@ -396,6 +410,10 @@ def voer_experiment_uit(
 
     rekentijd_improving = time.perf_counter() - start_improving
 
+    # Werkelijke eindtemperatuur
+    aantal_verlagingen = t_max // cooling_it
+    eindtemperatuur = temp * (cooling_factor ** aantal_verlagingen)
+
     print(f'Penalty SA: {sa_penalty:.2f}')
     print(f'Total penalty: {best_penalty:.2f}')
     print(
@@ -406,13 +424,16 @@ def voer_experiment_uit(
     # Resultaten verzamelen
     resultaat = {
         't_max': t_max,
-        'cooling_factor': cooling_factor,
-        'cooling_it': cooling_it,
         'temp': temp,
+        'cooling_it': cooling_it,
+        'cooling_factor': cooling_factor,
         'Random seed': random_seed,
+        'Aantal temperatuurverlagingen': aantal_verlagingen,
+        'Eindtemperatuur': eindtemperatuur,
         'Penalty SA': sa_penalty,
         'Total penalty': best_penalty,
         'Total tardiness': best_tot_tard,
+        'Verbetering door IS': sa_penalty - best_penalty,
         'Rekentijd SA (s)': rekentijd_sa,
         'Rekentijd Improving Search (s)': rekentijd_improving,
         'Totale rekentijd (s)': rekentijd_sa + rekentijd_improving
@@ -428,10 +449,7 @@ def voer_experiment_uit(
 
 
 # Experimenten opslaan
-experimenten = {
-    'temp_cooling_it': []
-}
-
+experimenten = []
 
 # Beste resultaat bijhouden
 beste_penalty_totaal = float('inf')
@@ -459,7 +477,7 @@ def verwerk_resultaat(
     global beste_best_history
     global beste_temperature_history
 
-    experimenten['temp_cooling_it'].append(resultaat)
+    experimenten.append(resultaat)
 
     if resultaat['Total penalty'] < beste_penalty_totaal:
 
@@ -472,64 +490,110 @@ def verwerk_resultaat(
         beste_temperature_history = temperature_history
 
 
+# Alle mogelijke combinaties uitvoeren
+combinaties = list(product(
+    t_max_values,
+    temp_values,
+    cooling_it_values,
+    random_seed_values
+))
 
-for cooling_it in cooling_it_values:
+aantal_experimenten = len(combinaties)
 
-    # Aantal temperatuurverlagingen
-    k = t_max // cooling_it
+print(f'\nTotaal aantal experimenten: {aantal_experimenten}')
+
+start_totaal = time.perf_counter()
+
+for nummer, (t_max, temp, cooling_it, seed) in enumerate(combinaties, start=1):
 
     # Cooling factor automatisch berekenen
-    cooling_factor = eindtemperatuur_factor ** (1 / k)
+    cooling_factor = bereken_cooling_factor(
+        t_max,
+        cooling_it
+    )
 
-    for seed in random_seed_values:
+    print(
+        f'\nExperiment {nummer} van {aantal_experimenten}'
+    )
 
-        (
-            resultaat,
-            beste_volgorde,
-            current_history,
-            best_history,
-            temperature_history
-        ) = voer_experiment_uit(
-            t_max,
-            cooling_factor,
-            cooling_it,
-            temp,
-            random_seed=seed
-        )
+    (
+        resultaat,
+        beste_volgorde,
+        current_history,
+        best_history,
+        temperature_history
+    ) = voer_experiment_uit(
+        t_max,
+        cooling_factor,
+        cooling_it,
+        temp,
+        random_seed=seed
+    )
 
-        verwerk_resultaat(
-            resultaat,
-            beste_volgorde,
-            current_history,
-            best_history,
-            temperature_history
-        )
+    verwerk_resultaat(
+        resultaat,
+        beste_volgorde,
+        current_history,
+        best_history,
+        temperature_history
+    )
 
 
-# Alle resultaten naar Excel
-df_resultaten = pd.DataFrame(experimenten['temp_cooling_it'])
+totale_rekentijd = time.perf_counter() - start_totaal
 
-# Samenvatting per combinatie van temp en cooling_it
+
+# Alle resultaten verzamelen
+df_resultaten = pd.DataFrame(experimenten)
+
+
+# Samenvatting per combinatie van t_max, temp en cooling_it
 df_samenvatting = (
     df_resultaten
-    .groupby(['temp', 'cooling_it'], as_index=False)
+    .groupby(
+        ['t_max', 'temp', 'cooling_it'],
+        as_index=False
+    )
     .agg(
+        Cooling_factor=('cooling_factor', 'first'),
+        Gemiddelde_penalty_SA=('Penalty SA', 'mean'),
         Gemiddelde_penalty=('Total penalty', 'mean'),
         Beste_penalty=('Total penalty', 'min'),
+        Slechtste_penalty=('Total penalty', 'max'),
         Standaarddeviatie=('Total penalty', 'std'),
+        Gemiddelde_tardiness=('Total tardiness', 'mean'),
+        Gemiddelde_verbetering_IS=('Verbetering door IS', 'mean'),
         Gemiddelde_rekentijd=('Totale rekentijd (s)', 'mean'),
         Aantal_runs=('Total penalty', 'count')
     )
 )
 
+# Sorteren op gemiddelde penalty
+df_samenvatting = df_samenvatting.sort_values(
+    by='Gemiddelde_penalty',
+    ascending=True
+)
+
+
 # Heatmapgegevens voor Excel
+# Rijen: t_max en temp
+# Kolommen: cooling_it
+# Waarden: gemiddelde penalty over vijf seeds
 df_heatmap = df_samenvatting.pivot(
-    index='temp',
+    index=['t_max', 'temp'],
     columns='cooling_it',
     values='Gemiddelde_penalty'
 )
 
-with pd.ExcelWriter('Experimenten6.xlsx', engine='openpyxl') as writer:
+
+# Beste individuele resultaten
+df_beste_resultaten = df_resultaten.sort_values(
+    by='Total penalty',
+    ascending=True
+).head(20)
+
+
+# Alle resultaten naar Excel
+with pd.ExcelWriter('Experimenten_november7.xlsx', engine='openpyxl') as writer:
 
     df_resultaten.to_excel(
         writer,
@@ -548,7 +612,38 @@ with pd.ExcelWriter('Experimenten6.xlsx', engine='openpyxl') as writer:
         sheet_name='Heatmap'
     )
 
-print('\nAlle 60 experimenten zijn opgeslagen in Experimenten6.xlsx')
+    df_beste_resultaten.to_excel(
+        writer,
+        sheet_name='Beste resultaten',
+        index=False
+    )
+
+    # Kolombreedtes automatisch aanpassen
+    for sheet in writer.sheets.values():
+
+        sheet.freeze_panes = 'A2'
+        sheet.auto_filter.ref = sheet.dimensions
+
+        for column in sheet.columns:
+
+            column_letter = column[0].column_letter
+
+            max_length = max(
+                len(str(cell.value))
+                if cell.value is not None else 0
+                for cell in column
+            )
+
+            sheet.column_dimensions[column_letter].width = min(
+                max_length + 2,
+                35
+            )
+
+
+print('\nAlle experimenten zijn opgeslagen in Experimenten6.xlsx')
+print(f'Totaal aantal experimenten: {aantal_experimenten}')
+print(f'Totale rekentijd: {totale_rekentijd:.2f} seconden')
+print(f'Totale rekentijd: {totale_rekentijd / 60:.2f} minuten')
 
 
 # Beste resultaat weergeven
@@ -561,7 +656,22 @@ print(f"Random seed: {beste_instellingen['Random seed']}")
 print(f"Penalty SA: {beste_instellingen['Penalty SA']:.2f}")
 print(f"Total penalty: {beste_penalty_totaal:.2f}")
 print(f"Total tardiness: {beste_instellingen['Total tardiness']:.2f}")
-print(f"Totale rekentijd: {beste_instellingen['Totale rekentijd (s)']:.2f} seconden")
+print(
+    f"Totale rekentijd: "
+    f"{beste_instellingen['Totale rekentijd (s)']:.2f} seconden"
+)
+
+
+# Beste gemiddelde parametercombinatie weergeven
+beste_gemiddelde = df_samenvatting.iloc[0]
+
+print('\nBeste parametercombinatie op basis van gemiddelde penalty:')
+print(f"t_max: {int(beste_gemiddelde['t_max'])}")
+print(f"Begintemperatuur: {int(beste_gemiddelde['temp'])}")
+print(f"Cooling interval: {int(beste_gemiddelde['cooling_it'])}")
+print(f"Cooling factor: {beste_gemiddelde['Cooling_factor']:.6f}")
+print(f"Gemiddelde penalty: {beste_gemiddelde['Gemiddelde_penalty']:.2f}")
+print(f"Standaarddeviatie: {beste_gemiddelde['Standaarddeviatie']:.2f}")
 
 
 # Grafiek van de beste SA-run
