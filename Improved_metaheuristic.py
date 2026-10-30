@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 import time
 
 # Instellingen
-t_max = 70000
-cooling_it = 100
+t_max = 7000000
+cooling_it = 1000
 k = t_max/cooling_it
 cooling_factor = 0.01**(1/k)
-temp = 100
-random.seed(14)
+temp = 1000
+random.seed(88)
 
 # Data inladen
-df = pd.read_excel('PaintShop-september2026.xlsx', sheet_name=None)
+df = pd.read_excel('PaintShop-November2026.xlsx', sheet_name=None)
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
@@ -89,8 +89,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
     return total_tardiness, penalty, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order
 
 def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
-    current = df_orders['Order'].tolist()
-    random.shuffle(current)
+    current = df_orders.sort_values('Deadline')['Order'].tolist()
     current_penalty = calculate_tard_pen(current, di_orders, di_machines, di_setups)[1]
     best = current.copy()
     best_penalty = current_penalty
