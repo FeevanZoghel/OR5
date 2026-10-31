@@ -291,7 +291,7 @@ def improving_search(di_orders):
         if verbetering:
             best_penalty = ronde_beste_penalty
             best_tot_tard = ronde_beste_tard
-            beste_volgorde = ronde_beste_volgorde.copy()
+            beste_volgorde = ronde_beste_volgorde.copy() # O(n)
 
         beste_penalty_per_iteratie.append(best_penalty)
 
