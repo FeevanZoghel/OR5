@@ -5,11 +5,6 @@ import random
 import math as m
 import time
 
-
-# --------------------------------------------------
-# INSTELLINGEN
-# --------------------------------------------------
-
 t_max = 700000
 cooling_it = 700
 k = t_max / cooling_it
@@ -17,12 +12,6 @@ cooling_factor = 0.01 ** (1 / k)
 temp = 500
 
 seeds = [1, 4, 9, 14,32, 88]
-
-
-# --------------------------------------------------
-# DATA INLADEN
-# --------------------------------------------------
-
 
 from pathlib import Path
 
@@ -55,11 +44,6 @@ orders_dict = {
     order['Order']: order
     for order in di_orders
 }
-
-
-# --------------------------------------------------
-# PLANNING EN PENALTY BEREKENEN
-# --------------------------------------------------
 
 def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
     """
@@ -149,11 +133,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
     return total_tardiness, penalty
 
-
-# --------------------------------------------------
-# DISCRETE IMPROVING SEARCH
-# --------------------------------------------------
-
 def improving_search(volgorde, di_orders, di_machines, di_setups):
     """
     Best-improvement search met pairwise swaps.
@@ -212,11 +191,6 @@ def improving_search(volgorde, di_orders, di_machines, di_setups):
 
     return best_tot_tard, best_penalty, beste_volgorde
 
-
-# --------------------------------------------------
-# SIMULATED ANNEALING
-# --------------------------------------------------
-
 def SA(df_orders, di_orders, di_machines, di_setups,
        t_max, cooling_factor, cooling_it, temp):
 
@@ -267,17 +241,7 @@ def SA(df_orders, di_orders, di_machines, di_setups,
 
     return best, best_tard, best_penalty
 
-
-# --------------------------------------------------
-# RESULTATEN OPSLAAN
-# --------------------------------------------------
-
 resultaten = []
-
-
-# --------------------------------------------------
-# EXPERIMENT 1: GREEDY
-# --------------------------------------------------
 
 print('Greedy uitvoeren...')
 
@@ -336,11 +300,6 @@ print(
     f'Greedy: {greedy_penalty:.2f} -> '
     f'{greedy_improved_penalty:.2f}'
 )
-
-
-# --------------------------------------------------
-# EXPERIMENT 2: SIMULATED ANNEALING
-# --------------------------------------------------
 
 for seed in seeds:
 
@@ -401,17 +360,7 @@ for seed in seeds:
         f'Improved {sa_improved_penalty:.2f}'
     )
 
-
-# --------------------------------------------------
-# DATAFRAMES MAKEN
-# --------------------------------------------------
-
 df_resultaten = pd.DataFrame(resultaten)
-
-
-# --------------------------------------------------
-# GEMIDDELDEN EN STANDAARDDEVIATIES
-# --------------------------------------------------
 
 df_samenvatting = (
     df_resultaten
@@ -446,11 +395,6 @@ df_samenvatting[
     ['Std_penalty_voor', 'Std_penalty_na']
 ].fillna(0)
 
-
-# --------------------------------------------------
-# TABEL VOOR GRAFIEKEN
-# --------------------------------------------------
-
 grafiek_resultaten = []
 
 for _, rij in df_samenvatting.iterrows():
@@ -475,11 +419,6 @@ for _, rij in df_samenvatting.iterrows():
 
 df_grafieken = pd.DataFrame(grafiek_resultaten)
 
-
-# --------------------------------------------------
-# INSTELLINGEN OPSLAAN
-# --------------------------------------------------
-
 df_instellingen = pd.DataFrame({
     'Parameter': [
         'Dataset',
@@ -500,11 +439,6 @@ df_instellingen = pd.DataFrame({
         len(di_machines)
     ]
 })
-
-
-# --------------------------------------------------
-# ALLES EXPORTEREN NAAR EXCEL
-# --------------------------------------------------
 
 with pd.ExcelWriter(
     'Vergelijking_oplossingsmethoden.xlsx',
@@ -534,11 +468,6 @@ with pd.ExcelWriter(
         sheet_name='Instellingen',
         index=False
     )
-
-
-# --------------------------------------------------
-# RESULTATEN WEERGEVEN
-# --------------------------------------------------
 
 print('\nOnderzoek afgerond!')
 

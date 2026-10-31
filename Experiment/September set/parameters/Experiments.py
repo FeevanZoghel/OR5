@@ -1,4 +1,4 @@
-"""PaintShop dashboard met donker thema en originele algoritmes."""
+# Code voor streamlit tool die het optimaliseren mooi runt
 import ast
 from io import BytesIO
 from pathlib import Path

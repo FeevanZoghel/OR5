@@ -7,11 +7,6 @@ import random
 import math as m
 import time
 
-
-# --------------------------------------------------
-# INSTELLINGEN
-# --------------------------------------------------
-
 t_max = 70000
 cooling_it = 700
 k = t_max / cooling_it
@@ -22,11 +17,6 @@ seed = 4
 
 # Snelheidsverhogingen
 verhogingen = [0, 10, 20, 30, 50]
-
-
-# --------------------------------------------------
-# DATA INLADEN
-# --------------------------------------------------
 
 from pathlib import Path
 
@@ -62,11 +52,6 @@ originele_snelheden = [
     machine['Speed']
     for machine in di_machines_org
 ]
-
-
-# --------------------------------------------------
-# TARDINESS EN PENALTY BEREKENEN
-# --------------------------------------------------
 
 def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
@@ -149,11 +134,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
     return total_tardiness, penalty
 
-
-# --------------------------------------------------
-# SIMULATED ANNEALING
-# --------------------------------------------------
-
 def SA(df_orders, di_orders, di_machines, di_setups,
        t_max, cooling_factor, cooling_it, temp):
 
@@ -201,11 +181,6 @@ def SA(df_orders, di_orders, di_machines, di_setups,
             temp *= cooling_factor
 
     return best, best_penalty
-
-
-# --------------------------------------------------
-# IMPROVING SEARCH NA SA
-# --------------------------------------------------
 
 def meta_improving_search(
     sa_volgorde,
@@ -267,11 +242,6 @@ def meta_improving_search(
 
     return best_tot_tard, best_penalty, beste_volgorde
 
-
-# --------------------------------------------------
-# MACHINESNELHEDEN AANPASSEN
-# --------------------------------------------------
-
 def maak_machines(verhoging_per_machine):
 
     di_machines = [
@@ -287,11 +257,6 @@ def maak_machines(verhoging_per_machine):
         )
 
     return di_machines
-
-
-# --------------------------------------------------
-# EXPERIMENT UITVOEREN
-# --------------------------------------------------
 
 def voer_experiment_uit(verhoging_per_machine):
 
@@ -337,11 +302,6 @@ def voer_experiment_uit(verhoging_per_machine):
         rekentijd_improving
     )
 
-
-# --------------------------------------------------
-# DEEL 1: MACHINES AFZONDERLIJK VERSNELLEN
-# --------------------------------------------------
-
 resultaten_sa = []
 resultaten_improved = []
 
@@ -383,11 +343,6 @@ for verhoging in verhogingen:
 
 df_sa = pd.DataFrame(resultaten_sa)
 df_improved = pd.DataFrame(resultaten_improved)
-
-
-# --------------------------------------------------
-# DEEL 2: MEERDERE MACHINES TEGELIJK VERSNELLEN
-# --------------------------------------------------
 
 resultaten_combinaties = []
 
@@ -463,11 +418,6 @@ for aantal in range(2, aantal_machines + 1):
                 f'Improved: {penalty_improved:.2f}'
             )
 
-
-# --------------------------------------------------
-# DEEL 3: RESULTATEN VERWERKEN
-# --------------------------------------------------
-
 df_combinaties = pd.DataFrame(resultaten_combinaties)
 
 if penalty_sa_0 != 0:
@@ -504,11 +454,6 @@ df_beste_combinaties = (
     .drop_duplicates(subset=['Combinatie'])
     .reset_index(drop=True)
 )
-
-
-# --------------------------------------------------
-# DEEL 4: RESULTATEN NAAR EXCEL
-# --------------------------------------------------
 
 with pd.ExcelWriter(
     'onderzoek_meta.xlsx',

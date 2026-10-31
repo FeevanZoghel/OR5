@@ -6,11 +6,6 @@ import random
 import math as m
 import time
 
-
-# --------------------------------------------------
-# INSTELLINGEN
-# --------------------------------------------------
-
 t_max = 700000
 cooling_it = 700
 k = t_max / cooling_it
@@ -21,12 +16,6 @@ seed = 4
 
 # Snelheidsverhogingen
 verhogingen = [25,26,27,28,29,30]
-
-
-# --------------------------------------------------
-# DATA INLADEN
-# --------------------------------------------------
-
 
 from pathlib import Path
 
@@ -63,11 +52,6 @@ originele_snelheden = [
     machine['Speed']
     for machine in di_machines_org
 ]
-
-
-# --------------------------------------------------
-# TARDINESS EN PENALTY BEREKENEN
-# --------------------------------------------------
 
 def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
@@ -150,11 +134,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
     return total_tardiness, penalty
 
-
-# --------------------------------------------------
-# SIMULATED ANNEALING
-# --------------------------------------------------
-
 def SA(df_orders, di_orders, di_machines, di_setups,
        t_max, cooling_factor, cooling_it, temp):
 
@@ -202,11 +181,6 @@ def SA(df_orders, di_orders, di_machines, di_setups,
             temp *= cooling_factor
 
     return best, best_penalty
-
-
-# --------------------------------------------------
-# IMPROVING SEARCH NA SA
-# --------------------------------------------------
 
 def meta_improving_search(
     sa_volgorde,
@@ -268,11 +242,6 @@ def meta_improving_search(
 
     return best_tot_tard, best_penalty, beste_volgorde
 
-
-# --------------------------------------------------
-# MACHINESNELHEDEN AANPASSEN
-# --------------------------------------------------
-
 def maak_machines(verhoging_per_machine):
 
     di_machines = [
@@ -288,12 +257,6 @@ def maak_machines(verhoging_per_machine):
         )
 
     return di_machines
-
-
-# --------------------------------------------------
-# EXPERIMENT UITVOEREN
-# --------------------------------------------------
-
 
 def voer_experiment_uit(verhoging_per_machine):
 
@@ -343,12 +306,6 @@ def voer_experiment_uit(verhoging_per_machine):
         rekentijd_sa,
         rekentijd_improving
     )
-
-
-
-# --------------------------------------------------
-# EXPERIMENTEN MET COMBINATIES
-# --------------------------------------------------
 
 combinaties = [
     [27, 27, 20],
@@ -436,10 +393,6 @@ for nummer, combinatie in enumerate(combinaties, start=1):
         f'Improved: {penalty_improved:.2f} | '
         f'Tijd: {rekentijd_sa + rekentijd_improving:.2f} s'
     )
-
-# --------------------------------------------------
-# RESULTATEN
-# --------------------------------------------------
 
 totale_rekentijd = time.perf_counter() - start_totaal
 

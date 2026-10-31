@@ -6,11 +6,6 @@ import random
 import math as m
 import time
 
-
-# --------------------------------------------------
-# INSTELLINGEN
-# --------------------------------------------------
-
 t_max = 700000
 cooling_it = 700
 k = t_max / cooling_it
@@ -21,11 +16,6 @@ seed = 4
 
 # Snelheidsverhogingen
 verhogingen = [20, 21, 22, 23]
-
-
-# --------------------------------------------------
-# DATA INLADEN
-# --------------------------------------------------
 
 from pathlib import Path
 
@@ -62,11 +52,6 @@ originele_snelheden = [
     machine['Speed']
     for machine in di_machines_org
 ]
-
-
-# --------------------------------------------------
-# TARDINESS EN PENALTY BEREKENEN
-# --------------------------------------------------
 
 def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
@@ -149,11 +134,6 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
 
     return total_tardiness, penalty
 
-
-# --------------------------------------------------
-# SIMULATED ANNEALING
-# --------------------------------------------------
-
 def SA(df_orders, di_orders, di_machines, di_setups,
        t_max, cooling_factor, cooling_it, temp):
 
@@ -201,11 +181,6 @@ def SA(df_orders, di_orders, di_machines, di_setups,
             temp *= cooling_factor
 
     return best, best_penalty
-
-
-# --------------------------------------------------
-# IMPROVING SEARCH NA SA
-# --------------------------------------------------
 
 def meta_improving_search(
     sa_volgorde,
@@ -267,11 +242,6 @@ def meta_improving_search(
 
     return best_tot_tard, best_penalty, beste_volgorde
 
-
-# --------------------------------------------------
-# MACHINESNELHEDEN AANPASSEN
-# --------------------------------------------------
-
 def maak_machines(verhoging_per_machine):
 
     di_machines = [
@@ -287,12 +257,6 @@ def maak_machines(verhoging_per_machine):
         )
 
     return di_machines
-
-
-# --------------------------------------------------
-# EXPERIMENT UITVOEREN
-# --------------------------------------------------
-
 
 def voer_experiment_uit(verhoging_per_machine):
 
@@ -343,13 +307,6 @@ def voer_experiment_uit(verhoging_per_machine):
         rekentijd_improving
     )
 
-
-
-
-# --------------------------------------------------
-# EXPERIMENTEN MET ALLE MOGELIJKE COMBINATIES
-# --------------------------------------------------
-
 from itertools import product
 import os
 
@@ -362,10 +319,6 @@ combinaties = list(product(verhogingen, repeat=3))
 print(f'Totaal aantal combinaties: {len(combinaties)}')
 
 bestandsnaam = 'onderzoek_meta_alle_combinaties.xlsx'
-
-# --------------------------------------------------
-# EERDERE RESULTATEN INLADEN
-# --------------------------------------------------
 
 if os.path.exists(bestandsnaam):
 
@@ -392,11 +345,6 @@ else:
 
     resultaten = []
     uitgevoerde_combinaties = set()
-
-
-# --------------------------------------------------
-# EXPERIMENTEN UITVOEREN
-# --------------------------------------------------
 
 start_totaal = time.perf_counter()
 
@@ -451,10 +399,6 @@ for nummer, combinatie in enumerate(combinaties, start=1):
 
     uitgevoerde_combinaties.add(combinatie)
 
-    # --------------------------------------------------
-    # RESULTATEN NA IEDERE RUN OPSLAAN
-    # --------------------------------------------------
-
     df_resultaten = pd.DataFrame(resultaten)
 
     df_resultaten.to_excel(
@@ -468,11 +412,6 @@ for nummer, combinatie in enumerate(combinaties, start=1):
         f'Improved: {penalty_improved:.2f} | '
         f'Tijd: {rekentijd_sa + rekentijd_improving:.2f} s'
     )
-
-
-# --------------------------------------------------
-# RESULTATEN SORTEREN
-# --------------------------------------------------
 
 df_resultaten = pd.DataFrame(resultaten)
 
@@ -495,11 +434,6 @@ df_penalty_nul = df_penalty_nul.sort_values(
 # Beste 20 combinaties
 df_top20 = df_resultaten.head(20).copy()
 
-
-# --------------------------------------------------
-# DEFINITIEVE EXCEL EXPORT
-# --------------------------------------------------
-
 with pd.ExcelWriter(bestandsnaam) as writer:
 
     df_resultaten.to_excel(
@@ -519,11 +453,6 @@ with pd.ExcelWriter(bestandsnaam) as writer:
         sheet_name='Penalty nul',
         index=False
     )
-
-
-# --------------------------------------------------
-# RESULTATEN WEERGEVEN
-# --------------------------------------------------
 
 totale_rekentijd = time.perf_counter() - start_totaal
 

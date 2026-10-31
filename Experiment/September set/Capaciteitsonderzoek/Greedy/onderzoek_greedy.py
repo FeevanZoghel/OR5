@@ -402,11 +402,6 @@ def voer_experiment_uit(verhoging_per_machine):
 
     return penalty_greedy, penalty_improved
 
-
-# --------------------------------------------------
-# DEEL 1: MACHINES AFZONDERLIJK VERSNELLEN
-# --------------------------------------------------
-
 resultaten_greedy = []
 resultaten_improved = []
 
@@ -447,11 +442,6 @@ for verhoging in verhogingen:
 
 df_greedy = pd.DataFrame(resultaten_greedy)
 df_improved = pd.DataFrame(resultaten_improved)
-
-
-# --------------------------------------------------
-# DEEL 2: MEERDERE MACHINES TEGELIJK VERSNELLEN
-# --------------------------------------------------
 
 resultaten_combinaties = []
 
@@ -525,11 +515,6 @@ for aantal in range(2, aantal_machines + 1):
                 f'Improved: {penalty_improved:.2f}'
             )
 
-
-# --------------------------------------------------
-# DEEL 3: RESULTATEN VERWERKEN
-# --------------------------------------------------
-
 df_combinaties = pd.DataFrame(resultaten_combinaties)
 
 # Procentuele verbetering ten opzichte van nulmeting
@@ -559,11 +544,6 @@ df_beste_combinaties = (
     .drop_duplicates(subset=['Combinatie'])
     .reset_index(drop=True)
 )
-
-
-# --------------------------------------------------
-# DEEL 4: ALLE DRIE DE MACHINES GELIJKTIJDIG VERHOGEN
-# --------------------------------------------------
 
 # Snelheidsverhogingen voor alle drie de machines
 verhogingen_p_mach = [0, 5, 10, 15, 20, 25, 30]
@@ -618,12 +598,6 @@ if penalty_improved_0 != 0:
 else:
     df_verfijnd['Verbetering Improved (%)'] = 0
 
-
-
-# --------------------------------------------------
-# DEEL 6: COMBINATIES VAN 20% TOT 30%
-# --------------------------------------------------
-
 # Snelheidsverhogingen van 20% t/m 30%, stappen van 1%
 verhogingen_20_30 = list(range(20, 31))
 
@@ -657,11 +631,6 @@ for percentages in product(
         f'Improved: {penalty_improved:.2f}'
     )
 
-
-# --------------------------------------------------
-# RESULTATEN VERWERKEN
-# --------------------------------------------------
-
 df_20_30 = pd.DataFrame(resultaten_20_30)
 
 # Sorteren op laagste penalty en daarna totale verhoging
@@ -680,11 +649,6 @@ df_20_30_nul = df_20_30[
 
 # Beste 20 combinaties
 df_20_30_top20 = df_20_30.head(20).copy()
-
-
-# --------------------------------------------------
-# DEEL 6: ALLES OPSLAAN IN HETZELFDE EXCELBESTAND
-# --------------------------------------------------
 
 with pd.ExcelWriter(
     'onderzoek_greedy.xlsx',
