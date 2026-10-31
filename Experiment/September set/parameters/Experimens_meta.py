@@ -1,4 +1,3 @@
-
 from Functions import dictionary, random_swap, gantt_chart_list, resultaten_naar_excel_list
 import pandas as pd
 import random
@@ -6,19 +5,38 @@ import math as m
 import matplotlib.pyplot as plt
 import time
 
-# Instellingen
-t_max = 7000000
-cooling_it = 1000
-k = t_max/cooling_it
-cooling_factor = 0.01**(1/k)
-temp = 1000
-random.seed(88)
+# Instellingen experimenten
+t_max_values = [100, 500, 1000, 5000, 10000, 50000, 500000]
+cooling_factor_values = [0.90, 0.95, 0.97, 0.99, 0.995]
+cooling_it_values = [100, 250, 500, 1000, 2000]
+temp_values = [100, 250, 500, 1000, 2000]
+random_seed_values = [1, 2, 3, 4, 6]
 
-# Data inladen
-df = pd.read_excel('PaintShop-November2026.xlsx', sheet_name=None)
+# Standaardinstellingen
+t_max = 50000
+cooling_factor = 0.99
+cooling_it = 1000
+temp = 1000
+
+from pathlib import Path
+
+# Dataset inladen vanuit Data_test_sets
+BASE_DIR = next(
+    parent for parent in Path(__file__).resolve().parents
+    if parent.name == "OR5"
+)
+
+DATA_DIR = BASE_DIR / "Data_test_sets"
+
+df = pd.read_excel(
+    DATA_DIR / "PaintShop-September2026.xlsx",
+    sheet_name=None
+)
+
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
+
 
 # Dataframes omzetten naar dictionaries
 di_orders_org = dictionary(df_orders)
@@ -64,7 +82,7 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
                     setup_gevonden = True
                     break
             if not setup_gevonden:
-                print(f"Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}")
+                raise ValueError(f"Geen setup gevonden van {vorige_kleuren[machine_index]} naar {kleur}")
 
         productietijd = order['Surface'] / di_machines[machine_index]['Speed']
         begintijd = tijden[machine_index]
@@ -89,7 +107,8 @@ def calculate_tard_pen(volgorde, di_orders, di_machines, di_setups):
     return total_tardiness, penalty, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order
 
 def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
-    current = df_orders.sort_values('Deadline')['Order'].tolist()
+    current = df_orders['Order'].tolist()
+    random.shuffle(current)
     current_penalty = calculate_tard_pen(current, di_orders, di_machines, di_setups)[1]
     best = current.copy()
     best_penalty = current_penalty
@@ -184,35 +203,93 @@ def plot_sa_progress(current_history, best_history, temperature_history):
     plt.tight_layout()
     plt.show()
 
-# Simulated Annealing uitvoeren
 
-start_sa = time.perf_counter()
-sa_volgorde, sa_penalty, current_history, best_history, temperature_history = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
-rekentijd_sa = time.perf_counter() - start_sa
+# Experimenten uitvoeren
+def voer_experiment_uit(t_max, cooling_factor, cooling_it, temp, random_seed=1):
+    random.seed(random_seed)
+    print(f'\nExperiment: t_max={t_max}, cooling_factor={cooling_factor}, cooling_it={cooling_it}, temp={temp}')
 
-# Improving Search uitvoeren op de beste SA-volgorde
-start_improving = time.perf_counter()
-best_tot_tard, best_penalty, beste_volgorde, dis_penalties, dis_beste_penalties = meta_improving_search(sa_volgorde)
-rekentijd_improving = time.perf_counter() - start_improving
+    # Simulated Annealing
+    start_sa = time.perf_counter()
+    sa_volgorde, sa_penalty, current_history, best_history, temperature_history = SA(df_orders, t_max, cooling_factor, cooling_it, temp)
+    rekentijd_sa = time.perf_counter() - start_sa
 
-# Resultaten weergeven
-print(f'Penalty na Simulated Annealing: {sa_penalty:.2f}')
-print(f'Penalty na Improving Search: {best_penalty:.2f}')
-print(f'Verbetering door Improving Search: {sa_penalty - best_penalty:.2f}')
-print(f'Rekentijd SA: {rekentijd_sa:.2f} seconden')
-print(f'Rekentijd Improving Search: {rekentijd_improving:.2f} seconden')
-print(f'Totale rekentijd: {rekentijd_sa + rekentijd_improving:.2f} seconden')
+    # Improving Search
+    start_improving = time.perf_counter()
+    best_tot_tard, best_penalty, beste_volgorde, dis_penalties, dis_beste_penalties = meta_improving_search(sa_volgorde)
+    rekentijd_improving = time.perf_counter() - start_improving
 
-# Grafiek van Simulated Annealing
+    print(f'Penalty SA: {sa_penalty:.2f}')
+    print(f'Total penalty: {best_penalty:.2f}')
+    print(f'Totale rekentijd: {rekentijd_sa + rekentijd_improving:.2f} seconden')
+
+    resultaat = {
+        't_max': t_max,
+        'cooling_factor': cooling_factor,
+        'cooling_it': cooling_it,
+        'temp': temp,
+        'Penalty SA': sa_penalty,
+        'Total penalty': best_penalty,
+        'Total tardiness': best_tot_tard,
+        'Rekentijd SA (s)': rekentijd_sa,
+        'Rekentijd Improving Search (s)': rekentijd_improving,
+        'Totale rekentijd (s)': rekentijd_sa + rekentijd_improving,
+        'Random seed': random_seed
+    }
+
+    return resultaat, beste_volgorde, current_history, best_history, temperature_history
+
+# Experimenten per parameter
+experimenten = {
+    't_max': [],
+    'cooling_factor': [],
+    'cooling_it': [],
+    'temp': [],
+    'random_seed': []
+}
+
+# t_max experimenten
+for waarde in t_max_values:
+    resultaat, beste_volgorde, current_history, best_history, temperature_history = voer_experiment_uit(waarde, cooling_factor, cooling_it, temp)
+    experimenten['t_max'].append(resultaat)
+
+# Cooling factor experimenten
+for waarde in cooling_factor_values:
+    resultaat, beste_volgorde, current_history, best_history, temperature_history = voer_experiment_uit(t_max, waarde, cooling_it, temp)
+    experimenten['cooling_factor'].append(resultaat)
+
+# Cooling iterations experimenten
+for waarde in cooling_it_values:
+    resultaat, beste_volgorde, current_history, best_history, temperature_history = voer_experiment_uit(t_max, cooling_factor, waarde, temp)
+    experimenten['cooling_it'].append(resultaat)
+
+# Initial temperature experimenten
+for waarde in temp_values:
+    resultaat, beste_volgorde, current_history, best_history, temperature_history = voer_experiment_uit(t_max, cooling_factor, cooling_it, waarde)
+    experimenten['temp'].append(resultaat)
+
+
+# Random seed experimenten
+for waarde in random_seed_values:
+    resultaat, beste_volgorde, current_history, best_history, temperature_history = voer_experiment_uit(
+        t_max, cooling_factor, cooling_it, temp, random_seed=waarde
+    )
+    experimenten['random_seed'].append(resultaat)
+
+# Alle experimenten naar verschillende Excel-sheets
+with pd.ExcelWriter('Experimenten2.xlsx', engine='openpyxl') as writer:
+    for sheetnaam, resultaten in experimenten.items():
+        pd.DataFrame(resultaten).to_excel(writer, sheet_name=sheetnaam, index=False)
+
+print('\nAlle experimenten zijn opgeslagen in Experimenten2.xlsx')
+
+# Grafiek van het laatste experiment
 plot_sa_progress(current_history, best_history, temperature_history)
 
-# Definitieve planning na Improving Search
+# Eindresultaat van het laatste experiment
 tard, pen, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order = calculate_tard_pen(beste_volgorde, di_orders, di_machines, di_setups)
 
-print(f'De beste lijst is {beste_volgorde}, met een totale tardiness van {tard:.2f} en {pen:.2f} aan penalty')
+print(f'De beste lijst van het laatste experiment is {beste_volgorde}, met een totale tardiness van {tard:.2f} en {pen:.2f} aan penalty')
 
-# Definitieve planning exporteren naar Excel
 resultaten_naar_excel_list(beste_volgorde, di_orders, di_machines, machines_per_order, seqno_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, penalty_per_order, 'Results_SA_improved.xlsx')
-
-# Gantt-chart van de definitieve planning
 gantt_chart_list(beste_volgorde, di_orders, di_machines, machines_per_order, setup_per_order, begintijden, procestijden, eindtijden, tardiness_per_order, pen)

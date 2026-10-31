@@ -20,21 +20,33 @@ temp = 500
 seed = 4
 
 # Snelheidsverhogingen
-verhogingen = [20, 21, 22, 23]
+verhogingen = [25,26,27,28,29,30]
 
 
 # --------------------------------------------------
 # DATA INLADEN
 # --------------------------------------------------
 
+
+from pathlib import Path
+
+# Dataset inladen vanuit Data_test_sets
+BASE_DIR = next(
+    parent for parent in Path(__file__).resolve().parents
+    if parent.name == "OR5"
+)
+
+DATA_DIR = BASE_DIR / "Data_test_sets"
+
 df = pd.read_excel(
-    'PaintShop-September2026.xlsx',
+    DATA_DIR / "PaintShop-September2026.xlsx",
     sheet_name=None
 )
 
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
+
 
 di_orders_org = dictionary(df_orders)
 di_machines_org = dictionary(df_machines)
@@ -334,75 +346,51 @@ def voer_experiment_uit(verhoging_per_machine):
 
 
 
-
 # --------------------------------------------------
-# EXPERIMENTEN MET ALLE MOGELIJKE COMBINATIES
-# --------------------------------------------------
-
-from itertools import product
-import os
-
-# Alle percentages van 20% t/m 30%
-verhogingen = list(range(20, 24))
-
-# Alle mogelijke combinaties van M1, M2 en M3
-combinaties = list(product(verhogingen, repeat=3))
-
-print(f'Totaal aantal combinaties: {len(combinaties)}')
-
-bestandsnaam = 'onderzoek_meta_alle_combinaties.xlsx'
-
-# --------------------------------------------------
-# EERDERE RESULTATEN INLADEN
+# EXPERIMENTEN MET COMBINATIES
 # --------------------------------------------------
 
-if os.path.exists(bestandsnaam):
+combinaties = [
+    [27, 27, 20],
+    [25, 25, 25],
+    [25, 27, 20],
+    [27, 25, 20],
+    [27, 27, 22],
+    [26, 26, 20],
+    [26, 27, 20],
+    [27, 26, 20],
+    [28, 28, 20]
+]
 
-    df_resultaten = pd.read_excel(bestandsnaam)
+# Maximale rekentijd: 15 minuten
+max_rekentijd = 15 * 60
 
-    resultaten = df_resultaten.to_dict('records')
+# Geschatte tijd per volledige run
+geschatte_run_tijd = 100
 
-    # Bijhouden welke combinaties al zijn uitgevoerd
-    uitgevoerde_combinaties = {
-        (
-            int(r['M1 (%)']),
-            int(r['M2 (%)']),
-            int(r['M3 (%)'])
-        )
-        for r in resultaten
-    }
-
-    print(
-        f'{len(uitgevoerde_combinaties)} combinaties '
-        f'zijn al uitgevoerd.'
-    )
-
-else:
-
-    resultaten = []
-    uitgevoerde_combinaties = set()
-
-
-# --------------------------------------------------
-# EXPERIMENTEN UITVOEREN
-# --------------------------------------------------
-
+resultaten = []
 start_totaal = time.perf_counter()
+
+bestandsnaam = 'onderzoek_meta_combinaties.xlsx'
 
 for nummer, combinatie in enumerate(combinaties, start=1):
 
-    # Reeds uitgevoerde combinaties overslaan
-    if combinatie in uitgevoerde_combinaties:
-        continue
+    verstreken_tijd = time.perf_counter() - start_totaal
+    resterende_tijd = max_rekentijd - verstreken_tijd
+
+    # Geen nieuwe run starten als er te weinig tijd over is
+    if resterende_tijd < geschatte_run_tijd:
+        print('\nTijdslimiet bijna bereikt.')
+        break
 
     print(
-        f'\nExperiment {nummer}/{len(combinaties)} | '
+        f'\nExperiment {nummer}/{len(combinaties)}: '
         f'M1 +{combinatie[0]}%, '
         f'M2 +{combinatie[1]}%, '
         f'M3 +{combinatie[2]}%'
     )
 
-    # Simulated Annealing + Improving Search
+    # SA + Improving Search uitvoeren
     (
         penalty_sa,
         penalty_improved,
@@ -410,14 +398,12 @@ for nummer, combinatie in enumerate(combinaties, start=1):
         rekentijd_improving
     ) = voer_experiment_uit(combinatie)
 
-    # Nieuwe machinesnelheden berekenen
+    # Werkelijke gezamenlijke capaciteitsverhoging
     nieuwe_snelheden = [
-        originele_snelheden[i]
-        * (1 + combinatie[i] / 100)
+        originele_snelheden[i] * (1 + combinatie[i] / 100)
         for i in range(aantal_machines)
     ]
 
-    # Werkelijke procentuele toename totale machinesnelheid
     capaciteit_verhoging = (
         (sum(nieuwe_snelheden) / sum(originele_snelheden) - 1)
         * 100
@@ -433,22 +419,15 @@ for nummer, combinatie in enumerate(combinaties, start=1):
         'Penalty SA Improved': penalty_improved,
         'Rekentijd SA (s)': rekentijd_sa,
         'Rekentijd Improving (s)': rekentijd_improving,
-        'Totale rekentijd (s)': (
-            rekentijd_sa + rekentijd_improving
-        )
+        'Totale rekentijd (s)': rekentijd_sa + rekentijd_improving
     })
 
-    uitgevoerde_combinaties.add(combinatie)
-
-    # --------------------------------------------------
-    # RESULTATEN NA IEDERE RUN OPSLAAN
-    # --------------------------------------------------
-
+    # Resultaten na iedere run opslaan
     df_resultaten = pd.DataFrame(resultaten)
 
     df_resultaten.to_excel(
         bestandsnaam,
-        sheet_name='Alle combinaties',
+        sheet_name='Combinaties',
         index=False
     )
 
@@ -458,77 +437,23 @@ for nummer, combinatie in enumerate(combinaties, start=1):
         f'Tijd: {rekentijd_sa + rekentijd_improving:.2f} s'
     )
 
-
 # --------------------------------------------------
-# RESULTATEN SORTEREN
-# --------------------------------------------------
-
-df_resultaten = pd.DataFrame(resultaten)
-
-df_resultaten = df_resultaten.sort_values(
-    by=[
-        'Penalty SA Improved',
-        'Capaciteitsverhoging (%)'
-    ]
-).reset_index(drop=True)
-
-# Alle combinaties met penalty 0
-df_penalty_nul = df_resultaten[
-    df_resultaten['Penalty SA Improved'].abs() < 1e-9
-].copy()
-
-df_penalty_nul = df_penalty_nul.sort_values(
-    by='Capaciteitsverhoging (%)'
-)
-
-# Beste 20 combinaties
-df_top20 = df_resultaten.head(20).copy()
-
-
-# --------------------------------------------------
-# DEFINITIEVE EXCEL EXPORT
-# --------------------------------------------------
-
-with pd.ExcelWriter(bestandsnaam) as writer:
-
-    df_resultaten.to_excel(
-        writer,
-        sheet_name='Alle combinaties',
-        index=False
-    )
-
-    df_top20.to_excel(
-        writer,
-        sheet_name='Top 20',
-        index=False
-    )
-
-    df_penalty_nul.to_excel(
-        writer,
-        sheet_name='Penalty nul',
-        index=False
-    )
-
-
-# --------------------------------------------------
-# RESULTATEN WEERGEVEN
+# RESULTATEN
 # --------------------------------------------------
 
 totale_rekentijd = time.perf_counter() - start_totaal
 
 print('\nOnderzoek afgerond!')
-print(f'Aantal combinaties: {len(df_resultaten)}')
-print(f'Aantal combinaties met penalty 0: {len(df_penalty_nul)}')
-print(f'Rekentijd huidige uitvoering: {totale_rekentijd / 60:.2f} minuten')
+print(f'Totale rekentijd: {totale_rekentijd:.2f} seconden')
 print(f'Resultaten opgeslagen in {bestandsnaam}')
 
-if not df_penalty_nul.empty:
+if resultaten:
+    df_resultaten = pd.DataFrame(resultaten)
 
-    beste_nuloplossing = df_penalty_nul.iloc[0]
+    print('\nBeste gevonden combinatie:')
 
-    print('\nCombinatie met penalty 0 en kleinste capaciteitsverhoging:')
-    print(beste_nuloplossing.to_string())
+    beste_resultaat = df_resultaten.loc[
+        df_resultaten['Penalty SA Improved'].idxmin()
+    ]
 
-else:
-
-    print('\nGeen combinatie met penalty 0 gevonden.')
+    print(beste_resultaat.to_string())

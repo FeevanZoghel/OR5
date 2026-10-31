@@ -23,14 +23,26 @@ seeds = [1, 4, 9, 14,32, 88]
 # DATA INLADEN
 # --------------------------------------------------
 
+
+from pathlib import Path
+
+# Dataset inladen vanuit Data_test_sets
+BASE_DIR = next(
+    parent for parent in Path(__file__).resolve().parents
+    if parent.name == "OR5"
+)
+
+DATA_DIR = BASE_DIR / "Data_test_sets"
+
 df = pd.read_excel(
-    'PaintShop-september2026.xlsx',
+    DATA_DIR / "PaintShop-September2026.xlsx",
     sheet_name=None
 )
 
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
+
 
 di_orders = dictionary(df_orders)
 di_machines = dictionary(df_machines)

@@ -19,12 +19,26 @@ random_seed_values = [1, 88]
 eindtemperatuur_factor = 0.01
 
 
-# Data inladen
-df = pd.read_excel('PaintShop-November2026.xlsx', sheet_name=None)
+
+from pathlib import Path
+
+# Dataset inladen vanuit Data_test_sets
+BASE_DIR = next(
+    parent for parent in Path(__file__).resolve().parents
+    if parent.name == "OR5"
+)
+
+DATA_DIR = BASE_DIR / "Data_test_sets"
+
+df = pd.read_excel(
+    DATA_DIR / "PaintShop-November2026.xlsx",
+    sheet_name=None
+)
 
 df_orders = df['Orders']
 df_machines = df['Machines']
 df_setups = df['Setups']
+
 
 
 # Dataframes omzetten naar dictionaries
