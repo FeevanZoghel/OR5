@@ -6,19 +6,20 @@ import random
 import math as m
 import matplotlib.pyplot as plt
 
+# Instellingen
+t_max = 700000
+cooling_it = 700
+k = t_max/cooling_it
+cooling_factor = 0.01**(1/k)
+temp = 500
+random.seed(4)
 
 from pathlib import Path
 
-# Dataset inladen vanuit Data_test_sets
-BASE_DIR = next(
-    parent for parent in Path(__file__).resolve().parents
-    if parent.name == "OR5"
-)
-
-DATA_DIR = BASE_DIR / "Data_test_sets"
+BASE_DIR = Path(__file__).resolve().parent
 
 df = pd.read_excel(
-    DATA_DIR / "PaintShop-September2026.xlsx",
+    BASE_DIR / 'PaintShop_November2026.xlsx',
     sheet_name=None
 )
 
@@ -195,10 +196,7 @@ def SA(df_orders, t_max, cooling_factor, cooling_it, temp):
     return(best, best_penalty)
 
 
-t_max = 10000
-cooling_factor =0.99
-cooling_it = 1000
-temp = 1000
+
 
 oefen, oefen_pen = SA(df_orders, t_max, cooling_factor, cooling_it,temp)
 
