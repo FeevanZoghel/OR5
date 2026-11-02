@@ -563,7 +563,7 @@ def original_functions(filename, globals_for_functions):
     De vaste Excel-inleesregels worden niet uitgevoerd.
 
     """
-    path = Path(__file__).resolve().parent / filename
+    path = Path(__file__).resolve().parent.parent.parent / "02 Python code" / filename
     source = path.read_text(encoding="utf-8-sig")
     tree = ast.parse(source, filename=str(path))
     definitions = [
