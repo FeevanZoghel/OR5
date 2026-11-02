@@ -10,10 +10,11 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / '03_Input_Data'
 
 df = pd.read_excel(
-    BASE_DIR / 'PaintShop_November2026.xlsx',
+    DATA_DIR / 'PaintShop-November2026.xlsx',
     sheet_name=None
 )
 
@@ -47,8 +48,6 @@ di_setups_org = dictionary(df_setups)
 di_orders = di_orders_org.copy()
 di_machines = di_machines_org.copy()
 di_setups = di_setups_org.copy()
-
-di_orders.sort(key=lambda job: job['Deadline'])
 
 def plan_order(machine, order, tijd, vorige_kleur, di_setups):
     '''

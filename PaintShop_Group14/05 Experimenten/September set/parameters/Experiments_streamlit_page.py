@@ -1,4 +1,7 @@
 # Code voor streamlit tool die het optimaliseren mooi runt
+#URL:
+#https://makkelijktesten.streamlit.app/
+
 import ast
 from io import BytesIO
 from pathlib import Path

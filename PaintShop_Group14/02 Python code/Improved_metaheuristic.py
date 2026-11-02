@@ -17,10 +17,11 @@ random.seed(4)
 
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / '03_Input_Data'
 
 df = pd.read_excel(
-    BASE_DIR / 'PaintShop_November2026.xlsx',
+    DATA_DIR / 'PaintShop-November2026.xlsx',
     sheet_name=None
 )
 

@@ -22,16 +22,11 @@ eindtemperatuur_factor = 0.01
 
 from pathlib import Path
 
-# Dataset inladen vanuit Data_test_sets
-BASE_DIR = next(
-    parent for parent in Path(__file__).resolve().parents
-    if parent.name == "OR5"
-)
-
-DATA_DIR = BASE_DIR / "Data_test_sets"
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / '03_Input_Data'
 
 df = pd.read_excel(
-    DATA_DIR / "PaintShop-November2026.xlsx",
+    DATA_DIR / 'PaintShop-November2026.xlsx',
     sheet_name=None
 )
 
