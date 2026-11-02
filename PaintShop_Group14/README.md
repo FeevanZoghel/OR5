@@ -43,7 +43,7 @@ De Improving Search gebruikt swaps en de *Best Improvement*-strategie en stopt w
 
 Installeer de benodigde pakketten via een terminal:
 
-```bash
+```
 python -m pip install pandas numpy matplotlib openpyxl
 ```
 
