@@ -18,12 +18,12 @@ De Improving Search gebruikt swaps en de *Best Improvement*-strategie en stopt w
 
 | Map / bestand | Inhoud |
 | --- | --- |
-| `01_Verslag/` | Verantwoordingsverslag als PDF, inclusief ontwerp, implementatie, validatie, experimenten, eigen onderzoek en bijlagen (waaronder de Implementation Checklist en documentatie van AI-gebruik). |
-| `02_Python_Code/` | Python-implementatie van de twee oplossingsmethoden en gedeelde functies. |
-| `03_Input_Data/` | De originele PaintShop-datasets van september en november 2026. |
-| `04_Validatie/` | Testplan, testdatasets en scripts voor de validatietests. |
-| `05_Experimenten/` | Vastgelegde experimentele resultaten en eventueel bijbehorende scripts. |
-| `06_Resultaten/` | Geselecteerde Excel-planningen, waaronder de definitieve planning voor de novemberdataset. |
+| `01 Verslag/` | Verantwoordingsverslag als PDF, inclusief ontwerp, implementatie, validatie, experimenten, eigen onderzoek en bijlagen (waaronder de Implementation Checklist en documentatie van AI-gebruik). |
+| `02 Python Code/` | Python-implementatie van de twee oplossingsmethoden en gedeelde functies. |
+| `03 Input Data/` | De originele PaintShop-datasets van september en november 2026. |
+| `04 Validatie/` | Testplan, testdatasets en scripts voor de validatietests. |
+| `05 Experimenten/` | Vastgelegde experimentele resultaten en eventueel bijbehorende scripts. |
+| `06 Resultaten/` | Geselecteerde Excel-planningen, waaronder de definitieve planning voor de novemberdataset. |
 | `README.md` | Deze handleiding. |
 
 ### Python-bestanden
@@ -64,7 +64,7 @@ python 02_Python_Code/Improved_metaheuristic.py
 
 **Let op:** elk commando start een afzonderlijke uitvoering. Het is niet nodig alle vier de scripts na elkaar te starten om één methode te testen. Bij Simulated Annealing kan de rekentijd aanzienlijk oplopen, afhankelijk van de ingestelde parameters.
 
-De scripts gebruiken Excel-invoer met de werkbladen `Orders`, `Machines` en `Setups`. Voor de definitieve inlevering is de **novemberdataset** de vereiste tweede probleeminstantie. De datasets staan in `03_Input_Data/`.
+De scripts gebruiken Excel-invoer met de werkbladen `Orders`, `Machines` en `Setups`. Voor de definitieve inlevering is de **novemberdataset** de vereiste tweede probleeminstantie. De datasets staan in `03 Input Data/`.
 
 ## 5. Uitvoer
 
@@ -74,16 +74,16 @@ De Excel-planning wordt gegenereerd met één werkblad, `Schedule`, en de kolomm
 
 `Order`, `Machine`, `SeqNo`, `Setup`, `Start`, `Process`, `End`, `Deadline`, `Tardiness`, `Penalty`, `Cost`.
 
-De **geselecteerde definitieve planning voor november 2026** staat in `06_Resultaten/`. Deze planning is het verplichte eindresultaat voor de tweede dataset.
+De **geselecteerde definitieve planning voor november 2026** staat in `06 Resultaten/`. Deze planning is het verplichte eindresultaat voor de tweede dataset.
 
 ## 6. Validatie en experimenten
 
 Voor de validatie zijn 13 tests opgesteld en uitgevoerd, onderverdeeld in *Happy Flow*, *Error Cases* en *Boundary Cases*. De testopzet, verwachte resultaten en uitkomsten zijn vastgelegd in het testplan en besproken in het verantwoordingsverslag.
 
-Bij de experimenten zijn de oplossingskwaliteit en rekentijd van beide methoden vergeleken. Voor Simulated Annealing is daarnaast de invloed van parameterinstellingen en random seeds onderzocht. De resultaten staan in `05_Experimenten/`; de analyses en conclusies in het verantwoordingsverslag.
+Bij de experimenten zijn de oplossingskwaliteit en rekentijd van beide methoden vergeleken. Voor Simulated Annealing is daarnaast de invloed van parameterinstellingen en random seeds onderzocht. De resultaten staan in `05 Experimenten/`; de analyses en conclusies in het verantwoordingsverslag.
 
 ## 7. Verantwoording
 
-De ontwerpkeuzes, validatie, experimenten, tijdscomplexiteitsanalyses, de eigen onderzoeksvraag en de documentatie van het gebruik van generatieve AI zijn opgenomen in het verantwoordingsverslag in `01_Verslag/`.
+De ontwerpkeuzes, validatie, experimenten, tijdscomplexiteitsanalyses, de eigen onderzoeksvraag en de documentatie van het gebruik van generatieve AI zijn opgenomen in het verantwoordingsverslag in `01 Verslag/`.
 
 De bijgevoegde Python-code en Excelresultaten vormen samen met het verslag het beoordeelbare portfolio.
